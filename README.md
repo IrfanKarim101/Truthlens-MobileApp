@@ -222,7 +222,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGithub](https://github.com/irfankarim101)
+- **Irfan Karim** - *Initial work* - [Github](https://github.com/irfankarim101)
+- **Sohail Ahmad** - *Initial work* - [Github](https://github.com/)
+- **Aliyan Ali** - *Initial work* - [Github](https://github.com/Aliyan167)
 
 ## 🙏 Acknowledgments
 
