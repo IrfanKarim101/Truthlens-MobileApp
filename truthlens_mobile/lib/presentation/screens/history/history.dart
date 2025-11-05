@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
+import 'package:truthlens_mobile/presentation/routes/app_router.dart';
+
 class AnalysisHistoryScreen extends StatelessWidget {
   const AnalysisHistoryScreen({super.key});
 
@@ -147,7 +149,9 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: true,
                         isAuthentic: true,
                         confidence: '98% confidence',
-                        timeAgo: '3 hours ago',
+                        timeAgo: '3 hours ago', onTap: () { 
+                          Navigator.pushNamed(context, AppRoutes.analysisReport);
+                         },
                       ),
                       const SizedBox(height: 12),
 
@@ -156,7 +160,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: false,
                         isAuthentic: false,
                         confidence: '87% confidence',
-                        timeAgo: '5 hours ago',
+                        timeAgo: '5 hours ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -165,7 +169,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: true,
                         isAuthentic: true,
                         confidence: '95% confidence',
-                        timeAgo: '1 day ago',
+                        timeAgo: '1 day ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -174,7 +178,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: false,
                         isAuthentic: true,
                         confidence: '92% confidence',
-                        timeAgo: '1 day ago',
+                        timeAgo: '1 day ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -183,7 +187,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: true,
                         isAuthentic: false,
                         confidence: '78% confidence',
-                        timeAgo: '2 days ago',
+                        timeAgo: '2 days ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -192,7 +196,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: false,
                         isAuthentic: true,
                         confidence: '96% confidence',
-                        timeAgo: '3 days ago',
+                        timeAgo: '3 days ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -201,7 +205,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: true,
                         isAuthentic: true,
                         confidence: '99% confidence',
-                        timeAgo: '4 days ago',
+                        timeAgo: '4 days ago', onTap: () {  },
                       ),
                       const SizedBox(height: 12),
 
@@ -210,7 +214,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isImage: false,
                         isAuthentic: false,
                         confidence: '82% confidence',
-                        timeAgo: '5 days ago',
+                        timeAgo: '5 days ago', onTap: () {  },
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -254,6 +258,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
     required bool isAuthentic,
     required String confidence,
     required String timeAgo,
+    required VoidCallback onTap,
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
@@ -268,9 +273,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {
-                // TODO: Navigate to detail view
-              },
+              onTap: onTap,
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: const EdgeInsets.all(16),

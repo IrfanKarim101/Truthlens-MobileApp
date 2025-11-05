@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:truthlens_mobile/presentation/screens/about/about_us.dart';
 import 'package:truthlens_mobile/presentation/screens/auth/login_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/auth/signup_screen.dart';
+import 'package:truthlens_mobile/presentation/screens/history/analysis_report.dart';
 import 'package:truthlens_mobile/presentation/screens/history/history.dart';
 import 'package:truthlens_mobile/presentation/screens/home/home_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/splash/splash_screen.dart';
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.uploadImage: (_) => const UploadImageScreen(),
         AppRoutes.uploadVideo: (_) => const UploadVideoScreen(),
         AppRoutes.about: (_) => const AboutScreen(),
-        AppRoutes.analysisReport: (_) => const AnalysisHistoryScreen(),
+        AppRoutes.analysisReport: (_) => const AnalysisReportScreen(),
         AppRoutes.history: (_) => const AnalysisHistoryScreen(),
       },
     );
