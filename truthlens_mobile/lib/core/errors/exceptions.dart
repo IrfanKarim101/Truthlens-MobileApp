@@ -14,57 +14,83 @@ class TruthLensException implements Exception {
 }
 
 class NoInternetException extends TruthLensException {
-  NoInternetException([String message = 'No internet connection. Please check your network settings.'])
-      : super(message);
+  NoInternetException([
+    super.message =
+        'No internet connection. Please check your network settings.',
+  ]);
 }
 
 class ServerException extends TruthLensException {
-  ServerException([String message = 'Server error. Please try again later.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  ServerException([
+    super.message = 'Server error. Please try again later.',
+    int? statusCode,
+  ]) : super(statusCode: statusCode);
 }
 
 class BadRequestException extends TruthLensException {
-  BadRequestException([String message = 'Bad request. Please check your input.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  BadRequestException([
+    super.message = 'Bad request. Please check your input.',
+    int? statusCode,
+  ]) : super(statusCode: statusCode);
 }
 
 class UnauthorizedException extends TruthLensException {
-  UnauthorizedException([String message = 'Unauthorized access. Please log in again.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  UnauthorizedException([
+    super.message = 'Unauthorized access. Please log in again.',
+    int? statusCode,
+  ]) : super(statusCode: statusCode);
 }
 
 class ForbiddenException extends TruthLensException {
-  ForbiddenException([String message = 'Access denied. You do not have permission to perform this action.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  ForbiddenException([
+    super.message =
+        'Access denied. You do not have permission to perform this action.',
+    int? statusCode,
+  ]) : super(statusCode: statusCode);
 }
 
 class NotFoundException extends TruthLensException {
-  NotFoundException([String message = 'Resource not found.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  NotFoundException([super.message = 'Resource not found.', int? statusCode])
+    : super(statusCode: statusCode);
 }
 
 class ConflictException extends TruthLensException {
-  ConflictException([String message = 'Conflict occurred.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  ConflictException([super.message = 'Conflict occurred.', int? statusCode])
+    : super(statusCode: statusCode);
 }
 
 class InternalServerException extends TruthLensException {
-  InternalServerException([String message = 'Internal server error. Please try again later.', int? statusCode])
-      : super(message, statusCode: statusCode);
+  InternalServerException([
+    super.message = 'Internal server error. Please try again later.',
+    int? statusCode,
+  ]) : super(statusCode: statusCode);
 }
 
 class FormatException extends TruthLensException {
-  FormatException([String message = 'Invalid data format.'])
-      : super(message);
+  FormatException([super.message = 'Invalid data format.']);
 }
 
 class CacheException extends TruthLensException {
-  CacheException([String message = 'Cache error.'])
-      : super(message);
+  CacheException([super.message = 'Cache error.']);
 }
 
 class UnknownException extends TruthLensException {
-  UnknownException([String message = 'An unknown error occurred.'])
-      : super(message);
+  UnknownException([super.message = 'An unknown error occurred.']);
 }
 
+class TimeoutException extends TruthLensException {
+  TimeoutException([
+    super.message = 'The connection has timed out. Please try again later.',
+  ]);
+}
+
+class NetworkException extends TruthLensException {
+  NetworkException([
+    super.message = 'Network error occurred. Please check your connection.',
+  ]);
+}
+
+
+class CancelledException extends TruthLensException {
+  CancelledException([super.message = 'The request was cancelled.']);
+}
