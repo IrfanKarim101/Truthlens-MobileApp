@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 import 'dart:ui';
 
 import 'package:truthlens_mobile/presentation/screens/auth/signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -54,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 40),
-                    
+
                     // Logo and Title
                     Row(
                       children: [
@@ -288,7 +289,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.lightBlueAccent.withOpacity(0.3),
+                                      color: Colors.lightBlueAccent.withOpacity(
+                                        0.3,
+                                      ),
                                       blurRadius: 20,
                                       offset: const Offset(0, 8),
                                     ),
@@ -297,6 +300,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     // TODO: Handle login
+                                    Navigator.pushReplacementNamed(
+                                      context,
+                                      AppRoutes.home,
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
@@ -348,13 +355,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            // Navigator.pushNamed(context, '/signup');
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SignUpScreen(),
-                              ),
-                            );// for time being
+                            Navigator.pushNamed(context, AppRoutes.signup);
                           },
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,

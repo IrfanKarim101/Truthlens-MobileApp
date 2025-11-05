@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:truthlens_mobile/services/splash_services.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -55,19 +56,12 @@ class _SplashScreenState extends State<SplashScreen>
     _textSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: Curves.easeOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
 
-    _textFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: Curves.easeIn,
-      ),
-    );
+    _textFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
 
     // Subtitle animations
     _subtitleController = AnimationController(
@@ -75,21 +69,13 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _subtitleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _subtitleController,
-        curve: Curves.easeOut,
-      ),
-    );
+    _subtitleSlideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(parent: _subtitleController, curve: Curves.easeOut),
+        );
 
     _subtitleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _subtitleController,
-        curve: Curves.easeIn,
-      ),
+      CurvedAnimation(parent: _subtitleController, curve: Curves.easeIn),
     );
 
     // Dots animation
@@ -98,12 +84,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _dotsFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _dotsController,
-        curve: Curves.easeIn,
-      ),
-    );
+    _dotsFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _dotsController, curve: Curves.easeIn));
 
     // Start animations in sequence
     _startAnimations();
@@ -124,8 +108,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Navigate to next screen after animations
     await Future.delayed(const Duration(milliseconds: 2000));
-    // TODO: Navigate to login/home screen
-    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+
+    // Determine the initial route (login or home) from the splash service
+    final route = await SplashService.getInitialRoute();
+
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, route);
   }
 
   @override
@@ -167,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(),
-                
+
                 // Logo with animations
                 AnimatedBuilder(
                   animation: _logoController,

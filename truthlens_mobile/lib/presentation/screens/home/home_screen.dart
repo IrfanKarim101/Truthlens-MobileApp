@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
+import 'package:truthlens_mobile/presentation/routes/app_router.dart';
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -96,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: IconButton(
                             onPressed: () {
                               // TODO: Handle logout
+                              Navigator.pushNamed(context, AppRoutes.login);
                             },
                             icon: Icon(
                               Icons.logout,
@@ -170,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       iconColor: Colors.lightBlueAccent,
                       onTap: () {
                         // TODO: Navigate to upload image screen
+                        Navigator.pushNamed(context, AppRoutes.uploadImage);
                       },
                     ),
 
@@ -189,20 +193,46 @@ class _HomeScreenState extends State<HomeScreen> {
                       iconColor: Colors.purpleAccent.shade100,
                       onTap: () {
                         // TODO: Navigate to upload video screen
+                        Navigator.pushNamed(context, AppRoutes.uploadVideo);
                       },
                     ),
 
                     const SizedBox(height: 32),
 
                     // Recent Activity Section
-                    Text(
-                      'RECENT ACTIVITY',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withOpacity(0.6),
-                        letterSpacing: 1.2,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'RECENT ACTIVITY',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.6),
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Navigate to history screen
+                            Navigator.pushNamed(context, AppRoutes.history);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'See All',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.lightBlueAccent,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 16),
@@ -255,6 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: InkWell(
                               onTap: () {
                                 // TODO: Navigate to about screen
+                                Navigator.pushNamed(context, AppRoutes.about);
                               },
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
@@ -315,18 +346,11 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+              Icon(icon, color: color, size: 24),
               const SizedBox(height: 12),
               Text(
                 count,
@@ -367,10 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
           ),
           child: Material(
             color: Colors.transparent,
@@ -387,11 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: iconColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Icon(
-                        icon,
-                        color: iconColor,
-                        size: 28,
-                      ),
+                      child: Icon(icon, color: iconColor, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -447,10 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.15),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
           ),
           child: Row(
             children: [
