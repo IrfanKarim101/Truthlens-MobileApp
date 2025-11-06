@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_event.dart';
 import 'dart:ui';
 
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
@@ -96,8 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           child: IconButton(
-                            onPressed: () {
-                              // TODO: Handle logout
+                            onPressed: () {                             
+                              context.read<AuthBloc>().add(const LogoutRequested());
                               Navigator.pushNamed(context, AppRoutes.login);
                             },
                             icon: Icon(
