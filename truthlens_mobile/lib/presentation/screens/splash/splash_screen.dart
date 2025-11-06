@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_event.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_state.dart';
 import 'package:truthlens_mobile/services/splash_services.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -91,7 +95,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Start animations in sequence
     _startAnimations();
+
+    //context.read<AuthBloc>().add(const AutoLoginRequested());
   }
+
+
 
   void _startAnimations() async {
     await Future.delayed(const Duration(milliseconds: 300));
@@ -128,177 +136,223 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/img3.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is Authenticated) {
+            // User is logged in, navigate to home
+            Navigator.pushReplacementNamed(context, '/home');
+          } else if (state is Unauthenticated) {
+            // User is not logged in, navigate to login
+            Navigator.pushReplacementNamed(context, '/login');
+          }
+          // If AuthLoading or AuthInitial, stay on splash screen
+        },
         child: Container(
+          width: double.infinity,
+          height: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withOpacity(0.5),
-                Colors.black.withOpacity(0.3),
-                Colors.purple.withOpacity(0.3),
-                Colors.purple.withOpacity(0.5),
-              ],
+            image: DecorationImage(
+              image: AssetImage('assets/images/img2.jpg'),
+              fit: BoxFit.cover,
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-
-                // Logo with animations
-                AnimatedBuilder(
-                  animation: _logoController,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _logoFadeAnimation,
-                      child: ScaleTransition(
-                        scale: _logoScaleAnimation,
-                        child: Container(
-                          width: 200,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 1,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.6),
+                  Colors.black.withOpacity(0.4),
+                  Colors.purple.withOpacity(0.6),
+                  Colors.purple.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(),
+                  
+                  // Logo with animations
+                  AnimatedBuilder(
+                    animation: _logoController,
+                    builder: (context, child) {
+                      return FadeTransition(
+                        opacity: _logoFadeAnimation,
+                        child: ScaleTransition(
+                          scale: _logoScaleAnimation,
+                          child: Container(
+                            width: 200,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.remove_red_eye_outlined,
+                                    color: Colors.lightBlueAccent,
+                                    size: 40,
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Icon(
+                                    Icons.shield_outlined,
+                                    color: Colors.purpleAccent.shade100,
+                                    size: 40,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // TruthLens text with slide up animation
+                  AnimatedBuilder(
+                    animation: _textController,
+                    builder: (context, child) {
+                      return SlideTransition(
+                        position: _textSlideAnimation,
+                        child: FadeTransition(
+                          opacity: _textFadeAnimation,
+                          child: RichText(
+                            text: TextSpan(
                               children: [
-                                Icon(
-                                  Icons.remove_red_eye_outlined,
-                                  color: Colors.lightBlueAccent,
-                                  size: 40,
+                                TextSpan(
+                                  text: 'Truth',
+                                  style: TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                    letterSpacing: 1.5,
+                                  ),
                                 ),
-                                const SizedBox(width: 20),
-                                Icon(
-                                  Icons.shield_outlined,
-                                  color: Colors.purpleAccent.shade100,
-                                  size: 40,
+                                TextSpan(
+                                  text: 'lens',
+                                  style: TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.w300,
+                                    color: Colors.lightBlueAccent,
+                                    letterSpacing: 1.5,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
 
-                const SizedBox(height: 40),
+                  const SizedBox(height: 12),
 
-                // TruthLens text with slide up animation
-                AnimatedBuilder(
-                  animation: _textController,
-                  builder: (context, child) {
-                    return SlideTransition(
-                      position: _textSlideAnimation,
-                      child: FadeTransition(
-                        opacity: _textFadeAnimation,
-                        child: RichText(
-                          text: TextSpan(
+                  // Deepfake Detection subtitle with slide up animation
+                  AnimatedBuilder(
+                    animation: _subtitleController,
+                    builder: (context, child) {
+                      return SlideTransition(
+                        position: _subtitleSlideAnimation,
+                        child: FadeTransition(
+                          opacity: _subtitleFadeAnimation,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Deepfake Detection',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withOpacity(0.9),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Dots indicator
+                  AnimatedBuilder(
+                    animation: _dotsController,
+                    builder: (context, child) {
+                      return FadeTransition(
+                        opacity: _dotsFadeAnimation,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildDot(Colors.lightBlueAccent),
+                            const SizedBox(width: 12),
+                            _buildDot(Colors.purpleAccent.shade100),
+                            const SizedBox(width: 12),
+                            _buildDot(Colors.lightBlueAccent),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  const Spacer(),
+                  
+                  // Loading indicator at bottom
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 40.0),
+                          child: Column(
                             children: [
-                              TextSpan(
-                                text: 'Truth',
-                                style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  letterSpacing: 1.5,
+                              SizedBox(
+                                width: 30,
+                                height: 30,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.lightBlueAccent,
+                                  ),
                                 ),
                               ),
-                              TextSpan(
-                                text: 'lens',
+                              const SizedBox(height: 16),
+                              Text(
+                                'Checking authentication...',
                                 style: TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.w300,
-                                  color: Colors.lightBlueAccent,
-                                  letterSpacing: 1.5,
+                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.6),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 12),
-
-                // Deepfake Detection subtitle with slide up animation
-                AnimatedBuilder(
-                  animation: _subtitleController,
-                  builder: (context, child) {
-                    return SlideTransition(
-                      position: _subtitleSlideAnimation,
-                      child: FadeTransition(
-                        opacity: _subtitleFadeAnimation,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1.5,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Deepfake Detection',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.9),
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 30),
-
-                // Dots indicator
-                AnimatedBuilder(
-                  animation: _dotsController,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _dotsFadeAnimation,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildDot(Colors.lightBlueAccent),
-                          const SizedBox(width: 12),
-                          _buildDot(Colors.purpleAccent.shade100),
-                          const SizedBox(width: 12),
-                          _buildDot(Colors.lightBlueAccent),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-
-                const Spacer(),
-              ],
+                        );
+                      }
+                      return const SizedBox(height: 80);
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
