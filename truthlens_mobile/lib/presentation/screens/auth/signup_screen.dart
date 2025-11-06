@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:ui';
+
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/auth/auth_event.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -353,6 +357,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     // TODO: Handle sign up
+                                    context.read<AuthBloc>().add(
+                                      SignupRequested(
+                                        fullName: _nameController.text,
+                                        email: _emailController.text,
+                                        password: _passwordController.text,
+                                        confirmPassword:
+                                            _confirmPasswordController.text,
+                                      ),
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.transparent,
