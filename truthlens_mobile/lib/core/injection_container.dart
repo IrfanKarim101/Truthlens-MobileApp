@@ -2,12 +2,16 @@ import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:truthlens_mobile/business_logic/blocs/analysis/bloc/analysis_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
 import 'package:truthlens_mobile/core/network/api_intercepter.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
 import 'package:truthlens_mobile/core/utils/shared_prefs_helper.dart';
 import 'package:truthlens_mobile/data/data_source/remote/analysis_api_service.dart';
 import 'package:truthlens_mobile/data/data_source/remote/auth_api_service.dart';
+import 'package:truthlens_mobile/data/repositories/analysis_repo.dart';
+import 'package:truthlens_mobile/data/repositories/auth_repo.dart';
 
 // Core
 
@@ -108,19 +112,19 @@ Future<void> initializeDependencies() async {
   // ==================== BLOCS ====================
   
   // Auth BLoC
-  // getIt.registerFactory<AuthBloc>(
-  //   () => AuthBloc(authRepository: getIt<AuthRepository>()),
-  // );
+  getIt.registerFactory<AuthBloc>(
+    () => AuthBloc(authRepository: getIt<AuthRepository>()),
+  );
   
-  // // Analysis BLoC
+  // Analysis BLoC
   // getIt.registerFactory<AnalysisBloc>(
   //   () => AnalysisBloc(analysisRepository: getIt<AnalysisRepository>()),
   // );
   
-  // // Upload BLoC
-  // getIt.registerFactory<UploadBloc>(
-  //   () => UploadBloc(analysisRepository: getIt<AnalysisRepository>()),
-  // );
+  // Upload BLoC
+  getIt.registerFactory<UploadBloc>(
+    () => UploadBloc(analysisRepository: getIt<AnalysisRepository>(), analysisService: getIt<AnalysisApiService>(),)
+  );
   
   // // History BLoC
   // getIt.registerFactory<HistoryBloc>(
