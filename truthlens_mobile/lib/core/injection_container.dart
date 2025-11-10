@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:truthlens_mobile/business_logic/blocs/analysis/bloc/analysis_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
+import 'package:truthlens_mobile/business_logic/cubit/connectivity/connnectivity_cubit.dart';
 import 'package:truthlens_mobile/core/network/api_intercepter.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
@@ -130,6 +131,9 @@ Future<void> initializeDependencies() async {
   // getIt.registerFactory<HistoryBloc>(
   //   () => HistoryBloc(historyRepository: getIt<HistoryRepository>()),
   // );
+
+  // ==================== Cubits ====================
+  // getIt.registerLazySingleton<ConnectivityCubit>(() => ConnectivityCubit());
 }
 
 // Reset all dependencies (useful for testing)
