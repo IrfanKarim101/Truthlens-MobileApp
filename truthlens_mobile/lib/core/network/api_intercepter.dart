@@ -1,7 +1,9 @@
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
+import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 
 
 class ApiInterceptor extends Interceptor {
@@ -104,6 +106,9 @@ class ApiInterceptor extends Interceptor {
         // Refresh failed - logout user
         await _secureStorage.clearAll();
         // TODO: Navigate to login screen
+        // Navigator.of(AppRouter.navigatorKey.currentContext!)
+        //     .pushNamedAndRemoveUntil('/login', (route) => false);
+        
       }
     }
 

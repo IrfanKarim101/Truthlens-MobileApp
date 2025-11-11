@@ -2,7 +2,6 @@ import 'package:bloc/bloc.dart';
 import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:truthlens_mobile/data/repositories/analysis_repo.dart';
-
 part 'analysis_event.dart';
 part 'analysis_state.dart';
 
