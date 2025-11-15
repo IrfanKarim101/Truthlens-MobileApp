@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 
 class AnalysisHistoryScreen extends StatelessWidget {

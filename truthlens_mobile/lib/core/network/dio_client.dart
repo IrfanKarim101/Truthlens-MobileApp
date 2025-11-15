@@ -71,6 +71,8 @@ class DioClient {
       );
       return response;
     } on DioException catch (e) {
+      //debug print
+      debugPrint('Dio POST Error: ${e.message}');
       throw _handleError(e);
     }
   }

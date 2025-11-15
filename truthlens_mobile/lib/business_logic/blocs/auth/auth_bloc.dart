@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:truthlens_mobile/data/model/auth/login_request.dart';
 import 'package:truthlens_mobile/data/model/user_model.dart';
 import 'package:truthlens_mobile/data/model/auth/signup_request.dart';
@@ -20,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<AutoLoginRequested>(_onAutoLoginRequested);
     on<RefreshTokenRequested>(_onRefreshTokenRequested);
+    on<GoogleLoginRequested>(_onGoogleLoginRequested);
   }
 
   // Login Handler
@@ -268,5 +271,60 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     );
     return emailRegex.hasMatch(email);
+  }
+
+  // Google Login Handler
+  Future<void> _onGoogleLoginRequested(
+    GoogleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    try {
+      final response = await _authRepository.loginWithGoogle();
+
+      // If response is null or failed
+      if (!response.success) {
+        emit(AuthError(message: response.message));
+        return;
+      }
+
+      final data = response.data;
+      if (data == null) {
+        emit(const AuthError(message: "Missing login data from server"));
+        return;
+      }
+
+      final token = data.token;
+      final apiUser = data.user;
+
+      // Save token
+      await _authRepository.saveToken(token);
+      if (data.refreshToken != null) {
+        await _authRepository.saveRefreshToken(data.refreshToken!);
+      }
+
+      // Convert API user to domain UserModel
+      final userModel = UserModel(
+        id: apiUser.id,
+        email: apiUser.email,
+        fullName: apiUser.fullName,
+        profilePicture: apiUser.profilePicture ?? '',
+        createdAt: apiUser.createdAt ?? DateTime.now(),
+      );
+
+      emit(Authenticated(user: userModel, token: token));
+    } on ServerException catch (e) {
+      emit(AuthError(message: e.message));
+    } on NetworkException catch (e) {
+      emit(AuthError(message: e.message));
+    } on TimeoutException catch (e) {
+      emit(AuthError(message: e.message));
+    } catch (e, st) {
+      // catch any unexpected error
+      debugPrint('Google Login Error: $e');
+      debugPrintStack(stackTrace: st);
+      emit(AuthError(message: 'An unexpected error occurred: ${e.toString()}'));
+    }
   }
 }

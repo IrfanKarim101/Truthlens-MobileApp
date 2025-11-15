@@ -1,3 +1,6 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:truthlens_mobile/core/constants/api_constants.dart';
 import 'package:truthlens_mobile/core/errors/exceptions.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
@@ -16,6 +19,11 @@ class AuthApiService {
       final response = await _dioClient.post(
         ApiConstants.login,
         data: request.toJson(),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
       );
       return LoginResponse.fromJson(response.data);
     } catch (e) {
@@ -34,4 +42,34 @@ class AuthApiService {
       throw ServerException(e.toString());
     }
   }
+
+  //logout
+  Future<void> logout() async {
+    try {
+      await _dioClient.post(
+        ApiConstants.logout,
+      );
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  // authenticate with google
+  Future<LoginResponse> loginWithGoogle({
+  required String? idToken,
+  required String? accessToken,
+}) async {
+  final response = await _dioClient.post(
+    ApiConstants.googleLogin,
+    data: {
+      'id_token': idToken,
+      'access_token': accessToken,
+    },
+  );
+  debugPrint('Google Login Response: ${response.data}');
+  return LoginResponse.fromJson(response.data);
+}
+
+  
+
 }

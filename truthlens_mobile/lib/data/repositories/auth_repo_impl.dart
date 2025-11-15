@@ -1,3 +1,4 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
 import 'package:truthlens_mobile/data/data_source/remote/auth_api_service.dart';
 import 'package:truthlens_mobile/data/model/auth/login_request.dart';
@@ -8,8 +9,6 @@ import 'package:truthlens_mobile/data/model/user_model.dart';
 import 'package:truthlens_mobile/data/repositories/auth_repo.dart';
 import 'package:truthlens_mobile/core/utils/shared_prefs_helper.dart';
 
-
-
 class AuthRepositoryImpl implements AuthRepository {
   final AuthApiService _apiService;
   final SecureStorageHelper _secureStorage;
@@ -19,31 +18,31 @@ class AuthRepositoryImpl implements AuthRepository {
     required AuthApiService apiService,
     required SecureStorageHelper secureStorage,
     required SharedPrefsHelper sharedPrefs,
-  })  : _apiService = apiService,
-        _secureStorage = secureStorage,
-        _sharedPrefs = sharedPrefs;
+  }) : _apiService = apiService,
+       _secureStorage = secureStorage,
+       _sharedPrefs = sharedPrefs;
 
   @override
   Future<LoginResponse> login(LoginRequest request) async {
     final response = await _apiService.login(request);
-    
+
     // Save user data locally
     if (response.success && response.data != null) {
       await _saveUserData(response.data!.user);
     }
-    
+
     return response;
   }
 
   @override
   Future<SignupResponse> signup(SignupRequest request) async {
     final response = await _apiService.signup(request);
-    
+
     // Save user data locally
     if (response.success && response.data != null) {
       await _saveUserData(response.data!.user);
     }
-    
+
     return response;
   }
 
@@ -51,7 +50,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     // Optional: Call logout API
     // await _apiService.logout();
-    
+
     // Clear all local data
     await clearLocalData();
   }
@@ -83,7 +82,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserModel?> getCurrentUser() async {
-    final userJson = await _sharedPrefs.getUserData();
+    final userJson = _sharedPrefs.getUserData();
     if (userJson != null) {
       return UserModel.fromJson(userJson);
     }
@@ -102,12 +101,52 @@ class AuthRepositoryImpl implements AuthRepository {
     throw UnimplementedError();
   }
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email'], serverClientId: '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com');
+
+  @override
+  Future<LoginResponse> loginWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        throw Exception("User canceled Google Sign-In");
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? idToken = googleAuth.idToken;
+      final String? accessToken = googleAuth.accessToken;
+
+      // Check if idToken exists
+      if (idToken == null) {
+        throw Exception("Failed to retrieve idToken from Google Sign-In");
+      }
+
+      // Step 3: Send tokens to your backend via ApiService (assuming your API service takes idToken and accessToken)
+      final response = await _apiService.loginWithGoogle(
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      // Step 4: Save user data locally if login is successful
+      if (response.success && response.data != null) {
+        await _saveUserData(response.data!.user);
+      }
+
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Helper method to save user data
   Future<void> _saveUserData(dynamic user) async {
-    final userModel = user is UserModel ? user : UserModel.fromJson(user.toJson());
+    final userModel = user is UserModel
+        ? user
+        : UserModel.fromJson(user.toJson());
     await _sharedPrefs.saveUserData(userModel.toJson());
     await _secureStorage.saveUserId(userModel.id.toString());
     await _secureStorage.saveUserEmail(userModel.email);
   }
 }
-

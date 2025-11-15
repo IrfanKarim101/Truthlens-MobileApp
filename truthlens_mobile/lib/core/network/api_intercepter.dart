@@ -1,9 +1,9 @@
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:truthlens_mobile/core/constants/api_constants.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
-import 'package:truthlens_mobile/presentation/routes/app_router.dart';
+
 
 
 class ApiInterceptor extends Interceptor {
@@ -118,19 +118,17 @@ class ApiInterceptor extends Interceptor {
   Future<bool> _refreshToken() async {
     try {
       final refreshToken = await _secureStorage.getRefreshToken();
-      if (refreshToken == null) return false;
-
-      // TODO: Call refresh token API
-      // final response = await Dio().post(
-      //   '${ApiConstants.baseUrl}/auth/refresh/',
-      //   data: {'refresh_token': refreshToken},
-      // );
+      if (refreshToken == null) return false;     
+      final response = await Dio().post(
+        '${ApiConstants.baseUrl}/auth/refresh/',
+        data: {'refresh_token': refreshToken},
+      );
       
-      // if (response.statusCode == 200) {
-      //   final newToken = response.data['token'];
-      //   await _secureStorage.saveToken(newToken);
-      //   return true;
-      // }
+      if (response.statusCode == 200) {
+        final newToken = response.data['token'];
+        await _secureStorage.saveToken(newToken);
+        return true;
+      }
 
       return false;
     } catch (e) {
@@ -140,4 +138,6 @@ class ApiInterceptor extends Interceptor {
       return false;
     }
   }
+
+  
 }

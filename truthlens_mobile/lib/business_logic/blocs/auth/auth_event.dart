@@ -58,3 +58,8 @@ class AutoLoginRequested extends AuthEvent {
 class RefreshTokenRequested extends AuthEvent {
   const RefreshTokenRequested();
 }
+
+// Google Login Event
+class GoogleLoginRequested extends AuthEvent {
+  const GoogleLoginRequested();
+}

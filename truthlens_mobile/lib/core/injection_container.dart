@@ -11,8 +11,11 @@ import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
 import 'package:truthlens_mobile/core/utils/shared_prefs_helper.dart';
 import 'package:truthlens_mobile/data/data_source/remote/analysis_api_service.dart';
 import 'package:truthlens_mobile/data/data_source/remote/auth_api_service.dart';
+import 'package:truthlens_mobile/data/data_source/remote/history_api_service.dart';
 import 'package:truthlens_mobile/data/repositories/analysis_repo.dart';
+import 'package:truthlens_mobile/data/repositories/analysis_repo_impl.dart';
 import 'package:truthlens_mobile/data/repositories/auth_repo.dart';
+import 'package:truthlens_mobile/data/repositories/auth_repo_impl.dart';
 
 // Core
 
@@ -79,28 +82,28 @@ Future<void> initializeDependencies() async {
   );
   
   // History API Service
-  // getIt.registerLazySingleton<HistoryApiService>(
-  //   () => HistoryApiService(getIt<DioClient>()),
-  // );
+  getIt.registerLazySingleton<HistoryApiService>(
+    () => HistoryApiService(getIt<DioClient>()),
+  );
   
   // ==================== REPOSITORIES ====================
   
   // Auth Repository
-  // getIt.registerLazySingleton<AuthRepository>(
-  //   () => AuthRepositoryImpl(
-  //     apiService: getIt<AuthApiService>(),
-  //     secureStorage: getIt<SecureStorageHelper>(),
-  //     sharedPrefs: getIt<SharedPrefsHelper>(),
-  //   ),
-  // );
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      apiService: getIt<AuthApiService>(),
+      secureStorage: getIt<SecureStorageHelper>(),
+      sharedPrefs: getIt<SharedPrefsHelper>(),
+    ),
+  );
   
   // Analysis Repository
-  // getIt.registerLazySingleton<AnalysisRepository>(
-  //   () => AnalysisRepositoryImpl(
-  //     apiService: getIt<AnalysisApiService>(),
-  //     sharedPrefs: getIt<SharedPrefsHelper>(),
-  //   ),
-  // );
+  getIt.registerLazySingleton<AnalysisRepository>(
+    () => AnalysisRepositoryImpl(
+      apiService: getIt<AnalysisApiService>(),
+      sharedPrefs: getIt<SharedPrefsHelper>(),
+    ),
+  );
   
   // History Repository
   // getIt.registerLazySingleton<HistoryRepository>(
@@ -118,16 +121,16 @@ Future<void> initializeDependencies() async {
   );
   
   // Analysis BLoC
-  // getIt.registerFactory<AnalysisBloc>(
-  //   () => AnalysisBloc(analysisRepository: getIt<AnalysisRepository>()),
-  // );
+  getIt.registerFactory<AnalysisBloc>(
+    () => AnalysisBloc(analysisRepository: getIt<AnalysisRepository>()),
+  );
   
   // Upload BLoC
   getIt.registerFactory<UploadBloc>(
     () => UploadBloc(analysisRepository: getIt<AnalysisRepository>(), analysisService: getIt<AnalysisApiService>(),)
   );
   
-  // // History BLoC
+  // History BLoC
   // getIt.registerFactory<HistoryBloc>(
   //   () => HistoryBloc(historyRepository: getIt<HistoryRepository>()),
   // );

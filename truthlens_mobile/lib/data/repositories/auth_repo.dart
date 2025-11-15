@@ -18,4 +18,9 @@ abstract class AuthRepository {
   Future<UserModel?> getCurrentUser();
   Future<void> clearLocalData();
   Future<String> refreshToken(String refreshToken);
+  // authenticate with google
+  Future<LoginResponse> loginWithGoogle();
+
 }
+
+

@@ -10,7 +10,7 @@ import 'package:truthlens_mobile/presentation/screens/history/analysis_report.da
 import 'package:truthlens_mobile/presentation/screens/history/history.dart';
 import 'package:truthlens_mobile/presentation/screens/home/home_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/splash/splash_screen.dart';
-import 'package:truthlens_mobile/presentation/screens/test/test_auth.dart';
+// import 'package:truthlens_mobile/presentation/screens/test/test_auth.dart';
 import 'package:truthlens_mobile/presentation/screens/upload/image_upload.dart';
 import 'package:truthlens_mobile/presentation/screens/upload/video_upload.dart';
 
@@ -19,7 +19,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize all dependencies
-  // await initializeDependencies();
+   await initializeDependencies();
 
   runApp(const TruthLensApp());
 }
@@ -47,7 +47,7 @@ class TruthLensApp extends StatelessWidget {
 
         // Named routes
         routes: {
-          AppRoutes.splash: (_) => const SplashScreen(),
+          //AppRoutes.splash: (_) => const SplashScreen(),
           AppRoutes.login: (_) => const LoginScreen(),
           AppRoutes.signup: (_) => const SignUpScreen(),
           AppRoutes.home: (_) => const HomeScreen(),
@@ -56,7 +56,7 @@ class TruthLensApp extends StatelessWidget {
           AppRoutes.about: (_) => const AboutScreen(),
           AppRoutes.analysisReport: (_) => const AnalysisReportScreen(),
           AppRoutes.history: (_) => const AnalysisHistoryScreen(),
-          '/test-auth': (context) => const AuthTestScreen(),
+          //'/test-auth': (context) => const AuthTestScreen(),
         },
 
         // Route generator for dynamic routes
