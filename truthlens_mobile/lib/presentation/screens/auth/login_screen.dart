@@ -34,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (state is Authenticated) {
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is AuthError) {
+            debugPrint('---------------------------------> Login Error: ${state.message}');
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(content: Text(state.message)));

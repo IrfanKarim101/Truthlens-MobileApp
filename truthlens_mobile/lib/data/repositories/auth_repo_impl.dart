@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:truthlens_mobile/core/utils/secure_storage_helper.dart';
 import 'package:truthlens_mobile/data/data_source/remote/auth_api_service.dart';
@@ -101,13 +102,14 @@ class AuthRepositoryImpl implements AuthRepository {
     throw UnimplementedError();
   }
 
+// Google Sign-In implementation
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email'], serverClientId: '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com');
 
   @override
   Future<LoginResponse> loginWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
+      
       if (googleUser == null) {
         throw Exception("User canceled Google Sign-In");
       }
@@ -122,7 +124,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (idToken == null) {
         throw Exception("Failed to retrieve idToken from Google Sign-In");
       }
-
+    
       // Step 3: Send tokens to your backend via ApiService (assuming your API service takes idToken and accessToken)
       final response = await _apiService.loginWithGoogle(
         idToken: idToken,
@@ -130,9 +132,10 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       // Step 4: Save user data locally if login is successful
-      if (response.success && response.data != null) {
-        await _saveUserData(response.data!.user);
-      }
+      // if (response.success && response.data != null) {
+      //   await _saveUserData(response.data!.user);
+      //   debugPrint('Google Sign-In successful, user data saved locally.');
+      // }
 
       return response;
     } catch (e) {

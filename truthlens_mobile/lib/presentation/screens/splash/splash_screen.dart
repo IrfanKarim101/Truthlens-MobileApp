@@ -5,6 +5,8 @@ import 'package:truthlens_mobile/business_logic/blocs/auth/auth_event.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_state.dart';
 import 'package:truthlens_mobile/services/splash_services.dart';
 
+import '../../routes/app_router.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -96,21 +98,27 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animations in sequence
     _startAnimations();
 
-    //context.read<AuthBloc>().add(const AutoLoginRequested());
+    context.read<AuthBloc>().add(const AutoLoginRequested());
   }
 
-
-
   void _startAnimations() async {
+    // Check 1: Check mounted status before any AnimationController is used.
+    if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 300));
     _logoController.forward();
 
+    // Check 2: Check mounted status before the next chain of animations.
+    if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 600));
     _textController.forward();
 
+    // Check 3: Check mounted status.
+    if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 400));
     _subtitleController.forward();
 
+    // Check 4: Check mounted status.
+    if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 300));
     _dotsController.forward();
 
@@ -120,6 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
     // Determine the initial route (login or home) from the splash service
     final route = await SplashService.getInitialRoute();
 
+    // Check 5: Final check before attempting navigation (which disposes the widget)
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, route);
   }
@@ -140,12 +149,11 @@ class _SplashScreenState extends State<SplashScreen>
         listener: (context, state) {
           if (state is Authenticated) {
             // User is logged in, navigate to home
-            Navigator.pushReplacementNamed(context, '/home');
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is Unauthenticated) {
             // User is not logged in, navigate to login
-            Navigator.pushReplacementNamed(context, '/login');
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
           }
-          // If AuthLoading or AuthInitial, stay on splash screen
         },
         child: Container(
           width: double.infinity,
@@ -174,7 +182,7 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  
+
                   // Logo with animations
                   AnimatedBuilder(
                     animation: _logoController,
@@ -317,7 +325,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
 
                   const Spacer(),
-                  
+
                   // Loading indicator at bottom
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {

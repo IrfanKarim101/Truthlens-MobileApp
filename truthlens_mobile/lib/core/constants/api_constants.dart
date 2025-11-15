@@ -1,7 +1,7 @@
 class ApiConstants {
   // Base URL ---- Dummy URL, replace with actual server IP or domain ----
-  static const String baseUrl = 'http://192.168.1.13:8000/';
-  // Or IP: 'http://192.168.1.x:8000/api'
+  static const String baseUrl = 'http://192.168.1.19:8000/';
+  
   
   // Auth Endpoints
   static const String login = '/auth/login/';
@@ -12,9 +12,8 @@ class ApiConstants {
   static const String googleLogin = '/auth/google/';
   
   // Analysis Endpoints
-  static const String analyzeImage = '/analysis/image/';
-  static const String analyzeVideo = '/analysis/video/';
-  static const String getAnalysisResult = '/analysis/result/';
+  static const String analyzeImage = '/auth/predict-image/';
+  static const String analyzeVideo = '/auth/predict-video/';
   
   // History Endpoints
   static const String getHistory = '/history/';

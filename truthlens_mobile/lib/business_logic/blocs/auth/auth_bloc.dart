@@ -284,7 +284,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.loginWithGoogle();
 
       // If response is null or failed
-      if (!response.success) {
+      if (!response.success) {        
         emit(AuthError(message: response.message));
         return;
       }
@@ -299,10 +299,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final apiUser = data.user;
 
       // Save token
-      await _authRepository.saveToken(token);
-      if (data.refreshToken != null) {
-        await _authRepository.saveRefreshToken(data.refreshToken!);
-      }
+      // await _authRepository.saveToken(token);
+      // if (data.refreshToken != null) {
+      //   await _authRepository.saveRefreshToken(data.refreshToken!);
+      // }
 
       // Convert API user to domain UserModel
       final userModel = UserModel(
@@ -313,12 +313,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         createdAt: apiUser.createdAt ?? DateTime.now(),
       );
 
+
+      print(
+        '=====================================Google Login successful for user: ${userModel.email}',
+      );
       emit(Authenticated(user: userModel, token: token));
     } on ServerException catch (e) {
+      print(
+        '=====================================Google Login ServerException: ${e.message}',
+      );
       emit(AuthError(message: e.message));
     } on NetworkException catch (e) {
+      print(
+        '=====================================Google Login NetworkException: ${e.message}',
+      );
       emit(AuthError(message: e.message));
     } on TimeoutException catch (e) {
+      print(
+        '=====================================Google Login TimeoutException: ${e.message}',
+      );
       emit(AuthError(message: e.message));
     } catch (e, st) {
       // catch any unexpected error
