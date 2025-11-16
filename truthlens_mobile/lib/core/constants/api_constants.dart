@@ -21,6 +21,11 @@ class ApiConstants {
 
   static const String getUserStats = '/history/stats/';
   static const String deleteHistory = '/history/delete/';
+
+
+  // Profile Endpoints
+  static const String getProfile = '/auth/profile/';
+  static const String updateProfile = '/auth/custom-google/';
   
 
   
