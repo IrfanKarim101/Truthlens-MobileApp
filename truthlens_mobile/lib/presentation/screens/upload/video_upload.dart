@@ -67,8 +67,8 @@ class _UploadVideoScreenState extends State<UploadVideoScreen> {
               colors: [
                 Colors.black.withOpacity(0.5),
                 Colors.black.withOpacity(0.3),
+                Colors.purple.withOpacity(0.1),
                 Colors.purple.withOpacity(0.3),
-                Colors.purple.withOpacity(0.5),
               ],
             ),
           ),

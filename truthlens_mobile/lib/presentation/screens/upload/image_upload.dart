@@ -62,8 +62,8 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
               colors: [
                 Colors.black.withOpacity(0.5),
                 Colors.black.withOpacity(0.3),
+                Colors.purple.withOpacity(0.1),
                 Colors.purple.withOpacity(0.3),
-                Colors.purple.withOpacity(0.5),
               ],
             ),
           ),

@@ -23,6 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AutoLoginRequested>(_onAutoLoginRequested);
     on<RefreshTokenRequested>(_onRefreshTokenRequested);
     on<GoogleLoginRequested>(_onGoogleLoginRequested);
+    on<GoogleAutoLoginRequested>(_autoLoginGoogle);
   }
 
   // Login Handler
@@ -235,6 +236,37 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  Future<void> _autoLoginGoogle(
+    GoogleAutoLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      final googleSignIn = GoogleSignIn();
+      final isSignedIn = await googleSignIn.isSignedIn();
+
+      if (isSignedIn) {
+        final googleUser = await googleSignIn.signInSilently();
+        if (googleUser != null) {
+          final token = await _authRepository.getToken();
+          if (token != null) {
+            final userModel = UserModel(
+              id: int.parse(googleUser.id),
+              email: googleUser.email,
+              fullName: googleUser.displayName ?? '',
+              profilePicture: googleUser.photoUrl ?? '',
+              createdAt: DateTime.now(),
+            );
+            emit(Authenticated(user: userModel, token: token));
+            return;
+          }
+        }
+      }
+      emit(const Unauthenticated());
+    } catch (e) {
+      emit(const Unauthenticated());
+    }
+  }
+
   // Refresh Token Handler
   Future<void> _onRefreshTokenRequested(
     RefreshTokenRequested event,
@@ -284,7 +316,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _authRepository.loginWithGoogle();
 
       // If response is null or failed
-      if (!response.success) {        
+      if (!response.success) {
         emit(AuthError(message: response.message));
         return;
       }
@@ -299,10 +331,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final apiUser = data.user;
 
       // Save token
-      // await _authRepository.saveToken(token);
-      // if (data.refreshToken != null) {
-      //   await _authRepository.saveRefreshToken(data.refreshToken!);
-      // }
+      await _authRepository.saveToken(token);
+      if (data.refreshToken != null) {
+        await _authRepository.saveRefreshToken(data.refreshToken!);
+      }
 
       // Convert API user to domain UserModel
       final userModel = UserModel(
@@ -313,25 +345,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         createdAt: apiUser.createdAt ?? DateTime.now(),
       );
 
-
-      print(
-        '=====================================Google Login successful for user: ${userModel.email}',
-      );
       emit(Authenticated(user: userModel, token: token));
     } on ServerException catch (e) {
-      print(
-        '=====================================Google Login ServerException: ${e.message}',
-      );
       emit(AuthError(message: e.message));
     } on NetworkException catch (e) {
-      print(
-        '=====================================Google Login NetworkException: ${e.message}',
-      );
       emit(AuthError(message: e.message));
     } on TimeoutException catch (e) {
-      print(
-        '=====================================Google Login TimeoutException: ${e.message}',
-      );
       emit(AuthError(message: e.message));
     } catch (e, st) {
       // catch any unexpected error
@@ -340,4 +359,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: 'An unexpected error occurred: ${e.toString()}'));
     }
   }
+
+
+
+
 }

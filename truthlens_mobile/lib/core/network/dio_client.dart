@@ -216,4 +216,11 @@ class DioClient {
     
     return data.toString();
   }
+
+
+
+  // Expose Dio instance for advanced usage if needed
+  Dio get dio => _dio;
+
 }
+

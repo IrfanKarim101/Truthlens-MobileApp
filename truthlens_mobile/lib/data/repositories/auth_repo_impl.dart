@@ -103,13 +103,13 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
 // Google Sign-In implementation
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email'], serverClientId: '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com');
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile'], serverClientId: '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com');
 
   @override
   Future<LoginResponse> loginWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         throw Exception("User canceled Google Sign-In");
       }
@@ -131,11 +131,11 @@ class AuthRepositoryImpl implements AuthRepository {
         accessToken: accessToken,
       );
 
-      // Step 4: Save user data locally if login is successful
-      // if (response.success && response.data != null) {
-      //   await _saveUserData(response.data!.user);
-      //   debugPrint('Google Sign-In successful, user data saved locally.');
-      // }
+   //   Step 4: Save user data locally if login is successful
+      if (response.success && response.data != null) {
+        await _saveUserData(response.data!.user);
+        debugPrint('Google Sign-In successful, user data saved locally.');
+      }
 
       return response;
     } catch (e) {

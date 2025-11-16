@@ -42,8 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 colors: [
                   Colors.black.withOpacity(0.5),
                   Colors.black.withOpacity(0.3),
+                  Colors.purple.withOpacity(0.1),
                   Colors.purple.withOpacity(0.3),
-                  Colors.purple.withOpacity(0.5),
                 ],
               ),
             ),

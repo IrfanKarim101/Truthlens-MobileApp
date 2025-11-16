@@ -19,7 +19,7 @@ class ApiInterceptor extends Interceptor {
     // Add authorization token to headers
     final token = await _secureStorage.getToken();
     if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+      options.headers['Authorization'] = 'Token $token';
     }
 
     // Add content type

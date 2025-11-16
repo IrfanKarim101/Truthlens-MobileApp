@@ -20,6 +20,7 @@ abstract class AuthRepository {
   Future<String> refreshToken(String refreshToken);
   // authenticate with google
   Future<LoginResponse> loginWithGoogle();
+  
 
 }
 

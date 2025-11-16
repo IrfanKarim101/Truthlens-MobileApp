@@ -52,50 +52,56 @@ class AuthApiService {
   Future<LoginResponse> loginWithGoogle({
     required String? idToken,
     required String? accessToken,
-  }) async {
-    final response = await _dioClient.post(
-      ApiConstants.googleLogin,
-      data: {'id_token': idToken, 'access_token': accessToken},
+}) async {
+    // --- Step 1: Send Google Tokens to Django Backend for Authentication ---
+    final loginResponse = await _dioClient.post(
+        ApiConstants.googleLogin,
+        data: {'id_token': idToken, 'access_token': accessToken},
     );
-    debugPrint('Google Login Response: ${response.data}');
+    debugPrint('Google Login Response: ${loginResponse.data}');
 
     // 1. Check if the response contains the 'key' (Django success signal)
-    if (response.data is Map<String, dynamic> &&
-        response.data.containsKey('key')) {
-      final token = response.data['key'] as String;
+    if (loginResponse.data is Map<String, dynamic> &&
+        loginResponse.data.containsKey('key')) {
+        
+        final token = loginResponse.data['key'] as String;
 
-      // 2. Create the internal LoginData structure, mapping 'key' to 'token'.
-      //    Note: Since the server only returns the token key, you might need
-      //    to fetch the full UserInfo in a separate call or adapt your backend.
-      //    For now, we will create a LoginData object containing only the token.
+        // --- Step 2: Configure Dio for the Profile Fetch ---
+        // Your API requires the token (key) to be in the Authorization header.
+        // Assuming your Dio client handles setting the Authorization header globally.
+        // If not, you must manually set it before the GET request: 
+       _dioClient.dio.options.headers['Authorization'] = 'Token $token';
+        
+        // --- Step 3: Fetch User Profile using the new Django Token ---
+        // *Correction:* Do NOT use idToken or accessToken as query parameters here. 
+        // The endpoint needs the Django token set in the header (Step 2).
+        final userResponse = await _dioClient.get(
+            ApiConstants.getProfile,
+           queryParameters: {},
+        );
+        debugPrint('Google Profile Response: ${userResponse.data}');
+        
+        // --- Step 4: Parse the Profile Data ---
+        final apiUserJson = userResponse.data;
+        
+        // Assuming the response data directly maps to your UserInfo model
+        final userInfo = UserInfo.fromJson(apiUserJson);
 
-      // WARNING: This assumes your backend only returns the token on success.
-      // You will need to pass dummy/empty UserInfo or fetch the user details later.
+        // --- Step 5: Construct the Final Success Response ---
+        final loginData = LoginData(
+            user: userInfo, // Now populated with real data!
+            token: token,
+            refreshToken: null, // Assuming refresh token isn't returned here
+        );
 
-      // Assuming your UserModel can be partially or fully constructed later:
-      final dummyUser = UserInfo(
-        id: 0,
-        email: 'temp@user.com',
-        fullName: 'Google User',
-      ); // Replace with actual parsing/fetch
-
-      final loginData = LoginData(
-        user: dummyUser, // **FIXME: Must be populated with real user data.**
-        token: token,
-        refreshToken: null,
-      );
-
-      // 3. Manually construct the successful LoginResponse object.
-      return LoginResponse(
-        success: true, // Manually set to true because we got a 200 and a key.
-        message: 'Login successful',
-        data: loginData,
-      );
+        return LoginResponse(
+            success: true,
+            message: 'Login successful',
+            data: loginData,
+        );
     }
 
     // 4. Fallback for standard or error responses (non-200 or unexpected structure)
-    // This line is still needed if your backend ever returns a structured error
-    // with success: false. If not, you might need more robust error handling.
-    return LoginResponse.fromJson(response.data);
-  }
+    return LoginResponse.fromJson(loginResponse.data);
+}
 }

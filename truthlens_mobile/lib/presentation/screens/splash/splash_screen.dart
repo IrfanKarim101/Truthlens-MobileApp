@@ -98,7 +98,8 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animations in sequence
     _startAnimations();
 
-    context.read<AuthBloc>().add(const AutoLoginRequested());
+    // context.read<AuthBloc>().add(const AutoLoginRequested());
+    // context.read<AuthBloc>().add(const GoogleAutoLoginRequested());
   }
 
   void _startAnimations() async {
@@ -148,12 +149,18 @@ class _SplashScreenState extends State<SplashScreen>
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            // User is logged in, navigate to home
-            Navigator.pushReplacementNamed(context, AppRoutes.home);
-          } else if (state is Unauthenticated) {
-            // User is not logged in, navigate to login
-            Navigator.pushReplacementNamed(context, AppRoutes.login);
-          }
+          // Navigate to home screen
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        } else if (state is Unauthenticated) {
+          // Navigate to login screen
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        } else if (state is AuthError) {
+          // Maybe show error, then go to login
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        }
         },
         child: Container(
           width: double.infinity,
@@ -170,10 +177,10 @@ class _SplashScreenState extends State<SplashScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.6),
-                  Colors.black.withOpacity(0.4),
-                  Colors.purple.withOpacity(0.6),
-                  Colors.purple.withOpacity(0.8),
+                  Colors.black.withOpacity(0.5),
+                  Colors.black.withOpacity(0.3),
+                  Colors.purple.withOpacity(0.1),
+                  Colors.purple.withOpacity(0.3),
                 ],
               ),
             ),
