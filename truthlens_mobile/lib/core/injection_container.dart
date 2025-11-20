@@ -19,75 +19,71 @@ import 'package:truthlens_mobile/data/repositories/auth_repo_impl.dart';
 
 // Core
 
-
 // Data Sources
-
 
 // Repositories
 
-
 // BLoCs
 import '../../business_logic/blocs/auth/auth_bloc.dart';
-
 
 // GetIt instance
 final getIt = GetIt.instance;
 
 Future<void> initializeDependencies() async {
   // ==================== EXTERNAL ====================
-  
+
   // SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
-  
+
   // Flutter Secure Storage
   const secureStorage = FlutterSecureStorage();
   getIt.registerLazySingleton<FlutterSecureStorage>(() => secureStorage);
-  
+
   // Dio
   getIt.registerLazySingleton<Dio>(() => Dio());
-  
+
   // ==================== CORE / SERVICES ====================
-  
+
   // Secure Storage Helper
   getIt.registerLazySingleton<SecureStorageHelper>(
     () => SecureStorageHelper(getIt<FlutterSecureStorage>()),
   );
-  
+
   // SharedPrefs Helper
   getIt.registerLazySingleton<SharedPrefsHelper>(
     () => SharedPrefsHelper(getIt<SharedPreferences>()),
   );
-  
+
   // API Interceptor
   getIt.registerLazySingleton<ApiInterceptor>(
     () => ApiInterceptor(getIt<SecureStorageHelper>()),
   );
-  
+
   // Dio Client
   getIt.registerLazySingleton<DioClient>(
     () => DioClient(getIt<ApiInterceptor>()),
   );
-  
+
   // ==================== DATA SOURCES ====================
-  
+
   // Auth API Service
   getIt.registerLazySingleton<AuthApiService>(
     () => AuthApiService(getIt<DioClient>()),
   );
-  
+
   // Analysis API Service
   getIt.registerLazySingleton<AnalysisApiService>(
     () => AnalysisApiService(getIt<DioClient>()),
   );
-  
+
   // History API Service
   getIt.registerLazySingleton<HistoryApiService>(
     () => HistoryApiService(getIt<DioClient>()),
   );
-  
+
   // ==================== REPOSITORIES ====================
-  
+
   // Auth Repository
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -96,7 +92,7 @@ Future<void> initializeDependencies() async {
       sharedPrefs: getIt<SharedPrefsHelper>(),
     ),
   );
-  
+
   // Analysis Repository
   getIt.registerLazySingleton<AnalysisRepository>(
     () => AnalysisRepositoryImpl(
@@ -104,7 +100,7 @@ Future<void> initializeDependencies() async {
       sharedPrefs: getIt<SharedPrefsHelper>(),
     ),
   );
-  
+
   // History Repository
   // getIt.registerLazySingleton<HistoryRepository>(
   //   () => HistoryRepositoryImpl(
@@ -112,24 +108,22 @@ Future<void> initializeDependencies() async {
   //     sharedPrefs: getIt<SharedPrefsHelper>(),
   //   ),
   // );
-  
+
   // ==================== BLOCS ====================
-  
+
   // Auth BLoC
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(authRepository: getIt<AuthRepository>()),
   );
-  
+
   // Analysis BLoC
   getIt.registerFactory<AnalysisBloc>(
     () => AnalysisBloc(analysisRepository: getIt<AnalysisRepository>()),
   );
-  
+
   // Upload BLoC
-  getIt.registerFactory<UploadBloc>(
-    () => UploadBloc(analysisRepository: getIt<AnalysisRepository>(), analysisService: getIt<AnalysisApiService>(),)
-  );
-  
+  getIt.registerFactory<UploadBloc>(() => UploadBloc());
+
   // History BLoC
   // getIt.registerFactory<HistoryBloc>(
   //   () => HistoryBloc(historyRepository: getIt<HistoryRepository>()),

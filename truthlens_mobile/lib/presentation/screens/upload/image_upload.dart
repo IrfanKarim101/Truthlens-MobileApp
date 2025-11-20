@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:ui';
 import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
+import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
+import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 
 class UploadImageScreen extends StatefulWidget {
-  const UploadImageScreen({Key? key}) : super(key: key);
+  const UploadImageScreen({super.key});
 
   @override
   State<UploadImageScreen> createState() => _UploadImageScreenState();
@@ -14,6 +16,7 @@ class UploadImageScreen extends StatefulWidget {
 class _UploadImageScreenState extends State<UploadImageScreen> {
   File? _selectedImage;
   bool _isAnalyzing = false;
+  double _progress = 0.0;
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
@@ -27,220 +30,262 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
 
   Future<void> _analyzeImage() async {
     if (_selectedImage == null) return;
-    
-    setState(() {
-      _isAnalyzing = true;
-    });
-
-    // TODO: Implement image analysis logic
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isAnalyzing = false;
-    });
-
-    // TODO: Navigate to results screen
+    // Dispatch upload event to the UploadBloc
+    final bloc = context.read<UploadBloc>();
+    bloc.add(UploadImageRequested(_selectedImage!));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/img3.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withOpacity(0.5),
-                Colors.black.withOpacity(0.3),
-                Colors.purple.withOpacity(0.1),
-                Colors.purple.withOpacity(0.3),
-              ],
+      body: BlocProvider(
+        create: (_) => UploadBloc(),
+        child: BlocListener<UploadBloc, UploadState>(
+          listener: (context, state) {
+            if (state is UploadInProgress) {
+              setState(() {
+                _isAnalyzing = true;
+                _progress = state.progress;
+              });
+            } else if (state is UploadSuccess) {
+              setState(() {
+                _isAnalyzing = false;
+                _progress = 0.0;
+              });
+
+              // Navigate to analysis report screen (if implemented)
+              // otherwise show a success snackbar
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Analysis completed')),
+              );
+
+              // Try navigating to analysis report route if available
+              try {
+                Navigator.pushNamed(context, AppRoutes.analysisReport);
+              } catch (_) {}
+            } else if (state is UploadFailure) {
+              setState(() {
+                _isAnalyzing = false;
+                _progress = 0.0;
+              });
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.exception.message)));
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/img3.jpg'),
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      // Back Button
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.3),
+                    Colors.purple.withOpacity(0.1),
+                    Colors.purple.withOpacity(0.3),
+                  ],
+                ),
+              ),
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
                         children: [
-                          Text(
-                            'Upload Image',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                          // Back Button
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              icon: Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Detect deepfakes in photos',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Upload Area
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
-                              width: 2,
-                              strokeAlign: BorderSide.strokeAlignInside,
-                            ),
-                          ),
-                          child: _selectedImage == null
-                              ? _buildUploadPrompt()
-                              : _buildImagePreview(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Analyze Button (shown when image is selected)
-                if (_selectedImage != null)
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.lightBlueAccent,
-                                Colors.purpleAccent.shade100,
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.lightBlueAccent.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Upload Image',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Detect deepfakes in photos',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.6),
+                                ),
                               ),
                             ],
                           ),
-                          child: ElevatedButton(
-                            onPressed: _isAnalyzing ? null : _analyzeImage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Upload Area
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 2,
+                                  strokeAlign: BorderSide.strokeAlignInside,
+                                ),
+                              ),
+                              child: _selectedImage == null
+                                  ? _buildUploadPrompt()
+                                  : _buildImagePreview(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Analyze Button (shown when image is selected)
+                    if (_selectedImage != null)
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            if (_isAnalyzing)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: LinearProgressIndicator(
+                                  value: _progress > 0 ? _progress : null,
+                                  backgroundColor: Colors.white24,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.lightBlueAccent,
+                                  ),
+                                ),
+                              ),
+                            Container(
+                              width: double.infinity,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.lightBlueAccent,
+                                    Colors.purpleAccent.shade100,
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
                                 borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.lightBlueAccent.withOpacity(
+                                      0.3,
+                                    ),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _isAnalyzing ? null : _analyzeImage,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: _isAnalyzing
+                                    ? SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.analytics_outlined,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Analyze Image',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
-                            child: _isAnalyzing
-                                ? SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.analytics_outlined,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Analyze Image',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedImage = null;
-                            });
-                          },
-                          child: Text(
-                            'Choose Different Image',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 15,
+                            const SizedBox(height: 12),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImage = null;
+                                });
+                              },
+                              child: Text(
+                                'Choose Different Image',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 15,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
 
-                const SizedBox(height: 20),
-              ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

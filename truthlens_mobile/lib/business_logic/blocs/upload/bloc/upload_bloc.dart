@@ -1,12 +1,10 @@
 import 'dart:io';
-
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
-
 import 'package:truthlens_mobile/data/data_source/remote/analysis_api_service.dart';
+import 'package:truthlens_mobile/core/injection_container.dart';
 import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
 import 'package:truthlens_mobile/core/errors/exceptions.dart';
-import 'package:truthlens_mobile/data/repositories/analysis_repo.dart';
 
 part 'upload_event.dart';
 part 'upload_state.dart';
@@ -14,8 +12,8 @@ part 'upload_state.dart';
 class UploadBloc extends Bloc<UploadEvent, UploadState> {
   final AnalysisApiService _analysisService;
 
-  UploadBloc({required AnalysisApiService analysisService, required AnalysisRepository analysisRepository})
-    : _analysisService = analysisService,
+  UploadBloc()
+    : _analysisService = getIt<AnalysisApiService>(),
       super(UploadInitial()) {
     on<UploadImageRequested>(_onUploadImage);
     on<UploadVideoRequested>(_onUploadVideo);
