@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
 import 'package:truthlens_mobile/core/injection_container.dart';
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 import 'package:truthlens_mobile/presentation/screens/about/about_us.dart';
@@ -33,7 +34,9 @@ class TruthLensApp extends StatelessWidget {
       providers: [
         // Auth BLoC - Available throughout the app
         BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
-        // Add other global BLoCs here if needed
+        // Upload BLoC - Available throughout the app
+        BlocProvider<UploadBloc>(create: (context) => getIt<UploadBloc>()),
+
       ],
       child: MaterialApp(
         title: 'TruthLens',

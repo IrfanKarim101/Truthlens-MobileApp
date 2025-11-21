@@ -18,6 +18,7 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
     on<UploadImageRequested>(_onUploadImage);
     on<UploadVideoRequested>(_onUploadVideo);
     on<UploadProgressChanged>(_onProgressChanged);
+    on<UploadAnalyzingStarted>(_onAnalyzingStarted);
     on<UploadCancelled>(_onCancelled);
   }
 
@@ -28,11 +29,16 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
     emit(UploadInProgress(0.0));
 
     try {
+      bool analyzingStarted = false;
       final result = await _analysisService.analyzeImage(
         event.file,
         onSendProgress: (sent, total) {
           final progress = total > 0 ? sent / total : 0.0;
           add(UploadProgressChanged(progress));
+          if (progress >= 1.0 && !analyzingStarted) {
+            analyzingStarted = true;
+            add(UploadAnalyzingStarted());
+          }
         },
       );
 
@@ -53,11 +59,16 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
     emit(UploadInProgress(0.0));
 
     try {
+      bool analyzingStarted = false;
       final result = await _analysisService.analyzeVideo(
         event.file,
         onSendProgress: (sent, total) {
           final progress = total > 0 ? sent / total : 0.0;
           add(UploadProgressChanged(progress));
+          if (progress >= 1.0 && !analyzingStarted) {
+            analyzingStarted = true;
+            add(UploadAnalyzingStarted());
+          }
         },
       );
 
@@ -76,6 +87,13 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
     Emitter<UploadState> emit,
   ) {
     emit(UploadInProgress(event.progress));
+  }
+
+  void _onAnalyzingStarted(
+    UploadAnalyzingStarted event,
+    Emitter<UploadState> emit,
+  ) {
+    emit(UploadAnalyzing());
   }
 
   void _onCancelled(UploadCancelled event, Emitter<UploadState> emit) {

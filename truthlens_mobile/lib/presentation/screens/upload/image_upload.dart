@@ -15,7 +15,8 @@ class UploadImageScreen extends StatefulWidget {
 
 class _UploadImageScreenState extends State<UploadImageScreen> {
   File? _selectedImage;
-  bool _isAnalyzing = false;
+  bool _isUploading = false;
+  bool _isAnalyzingPhase = false;
   double _progress = 0.0;
 
   Future<void> _pickImage() async {
@@ -44,28 +45,40 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
           listener: (context, state) {
             if (state is UploadInProgress) {
               setState(() {
-                _isAnalyzing = true;
+                _isUploading = true;
+                _isAnalyzingPhase = false;
                 _progress = state.progress;
+              });
+              // If progress reached 1.0 we'll wait for analyzing event
+              if (state.progress >= 1.0) {
+                setState(() {
+                  _isUploading = false;
+                });
+              }
+            } else if (state is UploadAnalyzing) {
+              setState(() {
+                _isAnalyzingPhase = true;
+                _isUploading = false;
+                _progress = 1.0;
               });
             } else if (state is UploadSuccess) {
               setState(() {
-                _isAnalyzing = false;
+                _isAnalyzingPhase = false;
+                _isUploading = false;
                 _progress = 0.0;
               });
 
-              // Navigate to analysis report screen (if implemented)
-              // otherwise show a success snackbar
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Analysis completed')),
               );
 
-              // Try navigating to analysis report route if available
               try {
                 Navigator.pushNamed(context, AppRoutes.analysisReport);
               } catch (_) {}
             } else if (state is UploadFailure) {
               setState(() {
-                _isAnalyzing = false;
+                _isAnalyzingPhase = false;
+                _isUploading = false;
                 _progress = 0.0;
               });
               ScaffoldMessenger.of(
@@ -185,7 +198,8 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                         padding: const EdgeInsets.all(20.0),
                         child: Column(
                           children: [
-                            if (_isAnalyzing)
+                            if (_isUploading ||
+                                (_progress > 0.0 && _progress < 1.0))
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12.0),
                                 child: LinearProgressIndicator(
@@ -220,7 +234,9 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                                 ],
                               ),
                               child: ElevatedButton(
-                                onPressed: _isAnalyzing ? null : _analyzeImage,
+                                onPressed: (_isUploading || _isAnalyzingPhase)
+                                    ? null
+                                    : _analyzeImage,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
@@ -228,7 +244,7 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                child: _isAnalyzing
+                                child: _isAnalyzingPhase
                                     ? SizedBox(
                                         height: 24,
                                         width: 24,
@@ -400,6 +416,37 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
             fit: BoxFit.cover,
           ),
         ),
+
+        // Darken overlay during upload/analyzing
+        if (_isUploading || _isAnalyzingPhase)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.45),
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
+          ),
+
+        // Centered analyzing indicator
+        if (_isAnalyzingPhase)
+          Positioned.fill(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Analyzing...',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
         // Overlay gradient for better visibility
         Container(

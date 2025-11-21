@@ -19,3 +19,5 @@ final class UploadFailure extends UploadState {
   final TruthLensException exception;
   UploadFailure(this.exception);
 }
+
+final class UploadAnalyzing extends UploadState {}

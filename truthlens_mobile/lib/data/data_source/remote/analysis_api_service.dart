@@ -4,6 +4,7 @@ import 'package:truthlens_mobile/core/constants/api_constants.dart';
 import 'package:truthlens_mobile/core/errors/exceptions.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
 import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
+import 'package:http_parser/http_parser.dart';
 
 class AnalysisApiService {
   final DioClient _dioClient;
@@ -15,17 +16,29 @@ class AnalysisApiService {
     ProgressCallback? onSendProgress,
   }) async {
     try {
+      //for debugging
+      print(
+        '<----------------------------------->Before Upload Image File Path: ${imageFile.path}',
+      );
       FormData formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
+        'image': await MultipartFile.fromFile(
           imageFile.path,
-          filename: imageFile.path.split('/').last,
+          filename: imageFile.path.split('/').last,          
         ),
       });
 
       final response = await _dioClient.postFormData(
         ApiConstants.analyzeImage,
         formData,
+        options: Options(
+          contentType: null,
+        ),
         onSendProgress: onSendProgress,
+      );
+
+      //for debugging
+      print(
+        '<----------------------------------->After Upload Response data: ${response.data}',
       );
 
       return AnalysisResult.fromJson(response.data);
