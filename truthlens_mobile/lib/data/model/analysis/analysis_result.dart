@@ -3,7 +3,7 @@ import 'analysis_metrics.dart';
 import 'file_info.dart';
 
 class AnalysisResult extends Equatable {
-  final String id;
+  final int id;
   final bool isAuthentic;
   final int confidence;
   final AnalysisMetrics metrics;
@@ -25,12 +25,12 @@ class AnalysisResult extends Equatable {
 
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
     return AnalysisResult(
-      id: json['id'] ?? '',
-      isAuthentic: json['is_authentic'] ?? false,
-      confidence: json['confidence'] ?? 0,
+      id: json['id'] ?? 0,
+      isAuthentic: json['prediction'] ?? false,
+      confidence: json['score'] ?? 0,
       metrics: AnalysisMetrics.fromJson(json['metrics'] ?? {}),
       fileInfo: FileInfo.fromJson(json['file_info'] ?? {}),
-      analysisTime: (json['analysis_time'] ?? 0).toDouble(),
+      analysisTime: (json['time_taken'] ?? 0).toDouble(),
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'])
           : DateTime.now(),
@@ -41,11 +41,11 @@ class AnalysisResult extends Equatable {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'is_authentic': isAuthentic,
-      'confidence': confidence,
+      'prediction': isAuthentic,
+      'score': confidence,
       'metrics': metrics.toJson(),
       'file_info': fileInfo.toJson(),
-      'analysis_time': analysisTime,
+      'time_taken': analysisTime,
       'timestamp': timestamp.toIso8601String(),
       'recommendation': recommendation,
     };

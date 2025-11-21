@@ -29,10 +29,11 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     }
   }
 
-  Future<void> _analyzeImage() async {
+  Future<void> _analyzeImage(BuildContext ctx) async {
     if (_selectedImage == null) return;
-    // Dispatch upload event to the UploadBloc
-    final bloc = context.read<UploadBloc>();
+    // Dispatch upload event to the UploadBloc using a BuildContext
+    // that is beneath the BlocProvider in the widget tree.
+    final bloc = ctx.read<UploadBloc>();
     bloc.add(UploadImageRequested(_selectedImage!));
   }
 
@@ -73,14 +74,20 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
               );
 
               try {
-                Navigator.pushNamed(context, AppRoutes.analysisReport);
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.analysisReport,
+                  arguments: (state).result,
+                );
               } catch (_) {}
             } else if (state is UploadFailure) {
               setState(() {
                 _isAnalyzingPhase = false;
                 _isUploading = false;
                 _progress = 0.0;
-              });
+              });         
+              //for debugging    | -------- are added to help identify the log
+              print('<----------------------------------->Upload Failure: ${state.exception.message}');    
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.exception.message)));
@@ -233,50 +240,55 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                                   ),
                                 ],
                               ),
-                              child: ElevatedButton(
-                                onPressed: (_isUploading || _isAnalyzingPhase)
-                                    ? null
-                                    : _analyzeImage,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: _isAnalyzingPhase
-                                    ? SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.analytics_outlined,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Analyze Image',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                              letterSpacing: 0.5,
-                                            ),
-                                          ),
-                                        ],
+                              child: Builder(
+                                builder: (buttonCtx) {
+                                  return ElevatedButton(
+                                    onPressed:
+                                        (_isUploading || _isAnalyzingPhase)
+                                        ? null
+                                        : () => _analyzeImage(buttonCtx),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
+                                    ),
+                                    child: _isAnalyzingPhase
+                                        ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                            ),
+                                          )
+                                        : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.analytics_outlined,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Analyze Image',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(height: 12),

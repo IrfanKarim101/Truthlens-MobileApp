@@ -15,11 +15,7 @@ class AnalysisApiService {
     File imageFile, {
     ProgressCallback? onSendProgress,
   }) async {
-    try {
-      //for debugging
-      print(
-        '<----------------------------------->Before Upload Image File Path: ${imageFile.path}',
-      );
+    try {      
       FormData formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
           imageFile.path,
@@ -35,12 +31,6 @@ class AnalysisApiService {
         ),
         onSendProgress: onSendProgress,
       );
-
-      //for debugging
-      print(
-        '<----------------------------------->After Upload Response data: ${response.data}',
-      );
-
       return AnalysisResult.fromJson(response.data);
     } catch (e) {
       throw ServerException(e.toString());
@@ -53,7 +43,7 @@ class AnalysisApiService {
   }) async {
     try {
       FormData formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
+        'file': await MultipartFile.fromFile( //? changed 'video' to 'file' to match backend
           videoFile.path,
           filename: videoFile.path.split('/').last,
         ),

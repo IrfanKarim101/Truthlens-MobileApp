@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
 import 'package:truthlens_mobile/core/injection_container.dart';
+import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
 import 'package:truthlens_mobile/presentation/screens/about/about_us.dart';
 import 'package:truthlens_mobile/presentation/screens/auth/login_screen.dart';
@@ -20,7 +21,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize all dependencies
-   await initializeDependencies();
+  await initializeDependencies();
 
   runApp(const TruthLensApp());
 }
@@ -36,7 +37,6 @@ class TruthLensApp extends StatelessWidget {
         BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
         // Upload BLoC - Available throughout the app
         BlocProvider<UploadBloc>(create: (context) => getIt<UploadBloc>()),
-
       ],
       child: MaterialApp(
         title: 'TruthLens',
@@ -57,7 +57,8 @@ class TruthLensApp extends StatelessWidget {
           AppRoutes.uploadImage: (_) => const UploadImageScreen(),
           AppRoutes.uploadVideo: (_) => const UploadVideoScreen(),
           AppRoutes.about: (_) => const AboutScreen(),
-          AppRoutes.analysisReport: (_) => const AnalysisReportScreen(),
+          AppRoutes.analysisReport: (_) =>
+              const AnalysisReportScreen(result: null),
           AppRoutes.history: (_) => const AnalysisHistoryScreen(),
           //'/test-auth': (context) => const AuthTestScreen(),
         },
@@ -65,15 +66,13 @@ class TruthLensApp extends StatelessWidget {
         // Route generator for dynamic routes
         onGenerateRoute: (settings) {
           // Handle routes with parameters
-          if (settings.name == '/report') {
-            final args = settings.arguments as Map<String, dynamic>?;
+          if (settings.name == AppRoutes.analysisReport) {
+           final AnalysisResult? result = settings.arguments as AnalysisResult?;
             return MaterialPageRoute(
               builder: (context) => AnalysisReportScreen(
-                isAuthentic: args?['isAuthentic'] ?? true,
-                confidence: args?['confidence'] ?? 98,
-                fileName: args?['fileName'] ?? 'file.jpg',
-                // ... other parameters
+                result: result,
               ),
+              
             );
           }
 

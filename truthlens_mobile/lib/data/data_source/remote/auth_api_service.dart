@@ -58,7 +58,7 @@ class AuthApiService {
         ApiConstants.googleLogin,
         data: {'id_token': idToken, 'access_token': accessToken},
     );
-    debugPrint('Google Login Response: ${loginResponse.data}');
+   // debugPrint('Google Login Response: ${loginResponse.data}');
 
     // 1. Check if the response contains the 'key' (Django success signal)
     if (loginResponse.data is Map<String, dynamic> &&

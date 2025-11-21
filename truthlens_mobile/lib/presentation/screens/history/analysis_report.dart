@@ -1,37 +1,31 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
 
 class AnalysisReportScreen extends StatelessWidget {
-  final bool isAuthentic;
-  final int confidence;
-  final String fileName;
-  final String fileSize;
-  final String resolution;
-  final String analysisTime;
-  final String scannedTime;
-  final String scannedDate;
-  final Map<String, int> metrics;
+  final AnalysisResult? result;
 
-  const AnalysisReportScreen({
-    Key? key,
-    this.isAuthentic = true,
-    this.confidence = 98,
-    this.fileName = 'portrait_image.jpg',
-    this.fileSize = '2.4 MB',
-    this.resolution = '1920x1080',
-    this.analysisTime = '1.2s',
-    this.scannedTime = '2 hours ago',
-    this.scannedDate = 'Nov 4, 2025 at 2:30 PM',
-    this.metrics = const {
-      'Face Detection': 99,
-      'Skin Texture Analysis': 97,
-      'Eye Movement': 98,
-      'Lighting Consistency': 96,
-    },
-  }) : super(key: key);
+  const AnalysisReportScreen({super.key, this.result});
 
   @override
   Widget build(BuildContext context) {
+    final isAuthentic = result?.isAuthentic ?? true;
+    final confidence = result?.confidence ?? 98;
+    final fileName = result?.fileInfo.name ?? 'portrait_image.jpg';
+    final fileSize = result?.fileInfo.size ?? '2.4 MB';
+    final resolution = result?.fileInfo.resolution ?? '1920x1080';
+    final analysisTime = '${result?.analysisTime.toStringAsFixed(1) ?? '1.2'}s';
+    final scannedTime = result?.timeAgo ?? '2 hours ago';
+    final scannedDate =
+        result?.timestamp.toIso8601String() ?? 'Nov 4, 2025 at 2:30 PM';
+    final metrics =
+        result?.metrics.allMetrics ??
+        {
+          'Face Detection': 99,
+          'Skin Texture Analysis': 97,
+          'Eye Movement': 98,
+          'Lighting Consistency': 96,
+        };
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -135,42 +129,44 @@ class AnalysisReportScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: isAuthentic
+                                    color: (result?.isAuthentic ?? true)
                                         ? Colors.greenAccent.withOpacity(0.2)
                                         : Colors.redAccent.withOpacity(0.2),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: isAuthentic
+                                      color: (result?.isAuthentic ?? true)
                                           ? Colors.greenAccent
                                           : Colors.redAccent,
                                       width: 2,
                                     ),
                                   ),
                                   child: Icon(
-                                    isAuthentic
+                                    (result?.isAuthentic ?? true)
                                         ? Icons.check_circle
                                         : Icons.warning_amber,
-                                    color: isAuthentic
+                                    color: (result?.isAuthentic ?? true)
                                         ? Colors.greenAccent
                                         : Colors.redAccent,
                                     size: 40,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                
+
                                 // Status Text
                                 Text(
-                                  isAuthentic ? 'Authentic' : 'Deepfake Detected',
+                                  (result?.isAuthentic ?? true)
+                                      ? 'Authentic'
+                                      : 'Deepfake Detected',
                                   style: TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
-                                    color: isAuthentic
+                                    color: (result?.isAuthentic ?? true)
                                         ? Colors.greenAccent
                                         : Colors.redAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                
+
                                 // Confidence
                                 Text(
                                   '$confidence% Confidence',
@@ -180,16 +176,18 @@ class AnalysisReportScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-                                
+
                                 // Progress Bar
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: LinearProgressIndicator(
                                     value: confidence / 100,
                                     minHeight: 8,
-                                    backgroundColor: Colors.white.withOpacity(0.1),
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.1,
+                                    ),
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      isAuthentic
+                                      (result?.isAuthentic ?? true)
                                           ? Colors.greenAccent
                                           : Colors.redAccent,
                                     ),
@@ -225,9 +223,17 @@ class AnalysisReportScreen extends StatelessWidget {
                         icon: Icons.query_stats_outlined,
                         title: 'Scan Details',
                         children: [
-                          _buildInfoRow('Scanned', scannedTime, icon: Icons.access_time),
+                          _buildInfoRow(
+                            'Scanned',
+                            scannedTime,
+                            icon: Icons.access_time,
+                          ),
                           const SizedBox(height: 12),
-                          _buildInfoRow('Date', scannedDate, icon: Icons.calendar_today),
+                          _buildInfoRow(
+                            'Date',
+                            scannedDate,
+                            icon: Icons.calendar_today,
+                          ),
                         ],
                       ),
 
@@ -382,21 +388,14 @@ class AnalysisReportScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.15),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(
-                    icon,
-                    color: Colors.lightBlueAccent,
-                    size: 20,
-                  ),
+                  Icon(icon, color: Colors.lightBlueAccent, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     title,
@@ -424,11 +423,7 @@ class AnalysisReportScreen extends StatelessWidget {
         Row(
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                color: Colors.white.withOpacity(0.5),
-                size: 16,
-              ),
+              Icon(icon, color: Colors.white.withOpacity(0.5), size: 16),
               const SizedBox(width: 8),
             ],
             Text(
@@ -455,7 +450,7 @@ class AnalysisReportScreen extends StatelessWidget {
   Widget _buildMetricRow(String label, int percentage) {
     Color color;
     IconData icon;
-    
+
     if (percentage >= 95) {
       color = Colors.greenAccent;
       icon = Icons.face_outlined;
@@ -478,11 +473,7 @@ class AnalysisReportScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  color: color,
-                  size: 18,
-                ),
+                Icon(icon, color: color, size: 18),
                 const SizedBox(width: 8),
                 Text(
                   label,

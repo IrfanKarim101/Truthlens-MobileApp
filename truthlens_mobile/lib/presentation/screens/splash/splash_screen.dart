@@ -97,9 +97,10 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Start animations in sequence
     _startAnimations();
-
-    // context.read<AuthBloc>().add(const AutoLoginRequested());
-    // context.read<AuthBloc>().add(const GoogleAutoLoginRequested());
+    if (mounted) {
+      context.read<AuthBloc>().add(const AutoLoginRequested());
+      context.read<AuthBloc>().add(const GoogleAutoLoginRequested());
+    }
   }
 
   void _startAnimations() async {
@@ -129,9 +130,9 @@ class _SplashScreenState extends State<SplashScreen>
     // Determine the initial route (login or home) from the splash service
     final route = await SplashService.getInitialRoute();
 
-    // Check 5: Final check before attempting navigation (which disposes the widget)
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, route);
+    // // Check 5: Final check before attempting navigation (which disposes the widget)
+    // if (!mounted) return;
+    // Navigator.pushReplacementNamed(context, route);
   }
 
   @override
@@ -149,18 +150,18 @@ class _SplashScreenState extends State<SplashScreen>
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-          // Navigate to home screen
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
-        } else if (state is Unauthenticated) {
-          // Navigate to login screen
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
-        } else if (state is AuthError) {
-          // Maybe show error, then go to login
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
-        }
+            // Navigate to home screen
+            Navigator.pushReplacementNamed(context, AppRoutes.home);
+          } else if (state is Unauthenticated) {
+            // Navigate to login screen
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
+          } else if (state is AuthError) {
+            // Maybe show error, then go to login
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
+          }
         },
         child: Container(
           width: double.infinity,
