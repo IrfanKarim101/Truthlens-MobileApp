@@ -5,7 +5,7 @@ import 'file_info.dart';
 class AnalysisResult extends Equatable {
   final int id;
   final bool isAuthentic;
-  final int confidence;
+  final double confidence;
   final AnalysisMetrics metrics;
   final FileInfo fileInfo;
   final double analysisTime;
@@ -26,13 +26,13 @@ class AnalysisResult extends Equatable {
   factory AnalysisResult.fromJson(Map<String, dynamic> json) {
     return AnalysisResult(
       id: json['id'] ?? 0,
-      isAuthentic: json['prediction'] ?? false,
+      isAuthentic: json['prediction'] != null && json['prediction'].toString().toLowerCase() == 'real',
       confidence: json['score'] ?? 0,
       metrics: AnalysisMetrics.fromJson(json['metrics'] ?? {}),
       fileInfo: FileInfo.fromJson(json['file_info'] ?? {}),
       analysisTime: (json['time_taken'] ?? 0).toDouble(),
-      timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'])
+      timestamp: json['uploaded_at'] != null
+          ? DateTime.parse(json['uploaded_at'])
           : DateTime.now(),
       recommendation: json['recommendation'],
     );
@@ -46,7 +46,7 @@ class AnalysisResult extends Equatable {
       'metrics': metrics.toJson(),
       'file_info': fileInfo.toJson(),
       'time_taken': analysisTime,
-      'timestamp': timestamp.toIso8601String(),
+      'uploaded_at': timestamp.toIso8601String(),
       'recommendation': recommendation,
     };
   }

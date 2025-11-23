@@ -57,8 +57,8 @@ class TruthLensApp extends StatelessWidget {
           AppRoutes.uploadImage: (_) => const UploadImageScreen(),
           AppRoutes.uploadVideo: (_) => const UploadVideoScreen(),
           AppRoutes.about: (_) => const AboutScreen(),
-          AppRoutes.analysisReport: (_) =>
-              const AnalysisReportScreen(result: null),
+          //AppRoutes.analysisReport: (_) =>
+             // const AnalysisReportScreen(result: null),
           AppRoutes.history: (_) => const AnalysisHistoryScreen(),
           //'/test-auth': (context) => const AuthTestScreen(),
         },

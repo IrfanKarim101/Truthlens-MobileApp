@@ -86,8 +86,7 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 _isUploading = false;
                 _progress = 0.0;
               });         
-              //for debugging    | -------- are added to help identify the log
-              print('<----------------------------------->Upload Failure: ${state.exception.message}');    
+             
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.exception.message)));
