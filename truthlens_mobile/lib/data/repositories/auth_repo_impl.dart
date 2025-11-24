@@ -73,7 +73,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> saveToken(String token) async {
+    
     await _secureStorage.saveToken(token);
+    debugPrint('-------------------> Token saved: $token');
+
   }
 
   @override
@@ -82,10 +85,24 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  @override
   Future<UserModel?> getCurrentUser() async {
     final userJson = _sharedPrefs.getUserData();
+
     if (userJson != null) {
-      return UserModel.fromJson(userJson);
+      try {
+        // CRITICAL: Safely attempt to deserialize the UserModel.
+        return UserModel.fromJson(userJson);
+      } catch (e, st) {
+        //FAIL ED DESERIALIZATION: This is your repeated login cause.
+        debugPrint('---------------------> Auto-Login Failed: UserModel Deserialization Error: $e');
+        debugPrintStack(stackTrace: st);
+
+        // CRITICAL STEP: Clear the corrupted user data and token to force a clean login.
+        await clearLocalData(); // Assuming this clears both secure token and user data
+
+        return null; // Force failure of the auto-login check.
+      }
     }
     return null;
   }
@@ -102,8 +119,12 @@ class AuthRepositoryImpl implements AuthRepository {
     throw UnimplementedError();
   }
 
-// Google Sign-In implementation
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile'], serverClientId: '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com');
+  // Google Sign-In implementation
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId:
+        '168723626833-ft8g77c7a9m1ktakqumdlie5jb6t37oi.apps.googleusercontent.com',
+  );
 
   @override
   Future<LoginResponse> loginWithGoogle() async {
@@ -124,14 +145,14 @@ class AuthRepositoryImpl implements AuthRepository {
       if (idToken == null) {
         throw Exception("Failed to retrieve idToken from Google Sign-In");
       }
-    
+
       // Step 3: Send tokens to your backend via ApiService (assuming your API service takes idToken and accessToken)
       final response = await _apiService.loginWithGoogle(
         idToken: idToken,
         accessToken: accessToken,
       );
 
-   //   Step 4: Save user data locally if login is successful
+      //   Step 4: Save user data locally if login is successful
       if (response.success && response.data != null) {
         await _saveUserData(response.data!.user);
         debugPrint('Google Sign-In successful, user data saved locally.');
@@ -151,5 +172,10 @@ class AuthRepositoryImpl implements AuthRepository {
     await _sharedPrefs.saveUserData(userModel.toJson());
     await _secureStorage.saveUserId(userModel.id.toString());
     await _secureStorage.saveUserEmail(userModel.email);
+
+    // verify by printing wether saved correctly
+    debugPrint('-------------------> User data saved: ${userModel.toJson()}');
+    debugPrint('-------------------> User ID saved: ${userModel.id}');
+    debugPrint('-------------------> User Email saved: ${userModel.email}');
   }
 }

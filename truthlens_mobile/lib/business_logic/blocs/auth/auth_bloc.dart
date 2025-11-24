@@ -140,6 +140,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         // Convert API user to domain UserModel then emit authenticated state
         final apiUser = response.data!.user;
+        debugPrint(
+          '======================================> Signup User: ${apiUser.toJson()}',
+        );
         final userModel = UserModel(
           id: apiUser.id,
           email: apiUser.email,
@@ -246,23 +249,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isSignedIn) {
         final googleUser = await googleSignIn.signInSilently();
+
         if (googleUser != null) {
+          // SUCCESS: Proceed with token check and authentication
           final token = await _authRepository.getToken();
+          
           if (token != null) {
+            // ... (existing logic to build UserModel and emit Authenticated)
             final userModel = UserModel(
               id: int.parse(googleUser.id),
               email: googleUser.email,
               fullName: googleUser.displayName ?? '',
               profilePicture: googleUser.photoUrl ?? '',
+              // ... (rest of UserModel fields)
               createdAt: DateTime.now(),
             );
             emit(Authenticated(user: userModel, token: token));
             return;
           }
         }
+
+        // FALLBACK LOGIC: If signInSilently() returned null OR token is missing
+
+        // 1. Log the failure reason for debugging
+        debugPrint('Google silent sign-in failed or backend token is missing.');
+
+        // 2. Clear any potentially remnant local data to ensure a clean slate
+        // This helps prevent inconsistent state if the token was cleared but Google session remained
+        await _authRepository.clearLocalData();
+
+        // 3. Optional: Automatically trigger interactive sign-in
+        //    (This is typically done on the UI layer, but can be done here if necessary)
+        //    final user = await googleSignIn.signIn();
+        //    if (user != null) {
+        //        // Now dispatch a full GoogleLoginRequested event to hit the backend
+        //    }
       }
+      // Final exit: If all attempts failed, move to unauthenticated state.
       emit(const Unauthenticated());
     } catch (e) {
+      debugPrint('Google Auto-Login Catch Error: $e');
       emit(const Unauthenticated());
     }
   }
@@ -354,13 +380,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthError(message: e.message));
     } catch (e, st) {
       // catch any unexpected error
-      debugPrint('Google Login Error: $e');
-      debugPrintStack(stackTrace: st);
-      emit(AuthError(message: 'An unexpected error occurred: ${e.toString()}'));
     }
   }
-
-
-
-
 }

@@ -27,7 +27,7 @@ class AnalysisResult extends Equatable {
     return AnalysisResult(
       id: json['id'] ?? 0,
       isAuthentic: json['prediction'] != null && json['prediction'].toString().toLowerCase() == 'real',
-      confidence: json['score'] ?? 0,
+      confidence: json['score']*100 ?? 0,
       metrics: AnalysisMetrics.fromJson(json['metrics'] ?? {}),
       fileInfo: FileInfo.fromJson(json['file_info'] ?? {}),
       analysisTime: (json['time_taken'] ?? 0).toDouble(),

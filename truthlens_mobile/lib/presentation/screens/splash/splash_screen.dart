@@ -131,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen>
     final route = await SplashService.getInitialRoute();
 
     // // Check 5: Final check before attempting navigation (which disposes the widget)
-    // if (!mounted) return;
+    if (!mounted) return;
     // Navigator.pushReplacementNamed(context, route);
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:image/image.dart' as img;
 import 'dart:ui';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -26,6 +28,22 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
       setState(() {
         _selectedImage = File(image.path);
       });
+
+      // Run face detection immediately after selecting an image.
+      final hasFace = await _detectFace(_selectedImage!);
+      if (!hasFace) {
+        // Discard the selected image and notify the user
+        setState(() {
+          _selectedImage = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No face detected!!'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -35,6 +53,77 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     // that is beneath the BlocProvider in the widget tree.
     final bloc = ctx.read<UploadBloc>();
     bloc.add(UploadImageRequested(_selectedImage!));
+  }
+
+  Future<File> _compressImage(File file) async {
+  final bytes = await file.readAsBytes();
+  final image = img.decodeImage(bytes);
+  final resized = img.copyResize(
+    image!,
+    width: 1024,
+    height: 1024,
+    maintainAspect: true,
+  );
+
+  final compressedBytes = img.encodeJpg(resized, quality: 85);
+
+  final tempPath = '${file.path}_compressed.jpg';
+  final compressed = File(tempPath);
+  await compressed.writeAsBytes(compressedBytes);
+
+  return compressed;
+}
+
+  final FaceDetector _faceDetector = FaceDetector(
+    options: FaceDetectorOptions(
+      // You only need basic detection, no landmarks or contours needed
+      performanceMode: FaceDetectorMode.accurate,
+    ),
+  );
+
+  String _detectionResult = ''; // Stores "Face detected" or "No face detected"
+  bool _isDetecting = false;
+
+  Future<bool> _detectFace(File imageFile) async {
+    setState(() {
+      _isDetecting = true;
+      _detectionResult = 'Detecting...';
+    });
+
+    try {
+     
+      //compress image before detection
+      final compressedImage = await _compressImage(imageFile);
+      final List<Face> faces = await _faceDetector.processImage(
+        InputImage.fromFile(compressedImage),
+      );
+
+      setState(() {
+        if (faces.isNotEmpty) {
+          _detectionResult = ' Face detected (${faces.length} faces)';
+        } else {
+          _detectionResult = ' No face detected';
+        }
+      });
+
+      return faces.isNotEmpty;
+    } catch (e) {
+      setState(() {
+        _detectionResult = 'Error during detection';
+      });
+      print('------------------------------Face detection error: $e');
+      return false;
+    } finally {
+      setState(() {
+        _isDetecting = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _faceDetector.close();
+    super.dispose();
   }
 
   @override
@@ -85,8 +174,8 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 _isAnalyzingPhase = false;
                 _isUploading = false;
                 _progress = 0.0;
-              });         
-             
+              });
+
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.exception.message)));
@@ -243,7 +332,9 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                                 builder: (buttonCtx) {
                                   return ElevatedButton(
                                     onPressed:
-                                        (_isUploading || _isAnalyzingPhase)
+                                        (_isUploading ||
+                                            _isAnalyzingPhase ||
+                                            _isDetecting)
                                         ? null
                                         : () => _analyzeImage(buttonCtx),
                                     style: ElevatedButton.styleFrom(
@@ -475,6 +566,25 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
             ),
           ),
         ),
+
+        // Detection result badge
+        if (_detectionResult.isNotEmpty)
+          Positioned(
+            left: 16,
+            bottom: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.15)),
+              ),
+              child: Text(
+                _detectionResult,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ),
 
         // Image info badge
         Positioned(

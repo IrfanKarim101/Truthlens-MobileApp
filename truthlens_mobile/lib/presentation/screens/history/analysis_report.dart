@@ -10,7 +10,8 @@ class AnalysisReportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAuthentic = result?.isAuthentic ?? true;
-    final confidence = result?.confidence ?? 98;
+    final double rawConfidence = result?.confidence ?? 98.0;
+    final  confidence = double.parse(rawConfidence.toStringAsFixed(4));
     final fileName = result?.fileInfo.name ?? 'portrait_image.jpg';
     final fileSize = result?.fileInfo.size ?? '2.4 MB';
     final resolution = result?.fileInfo.resolution ?? '1920x1080';
