@@ -378,6 +378,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'assets/images/google_logo.png',
                                       height: 24,
                                       width: 24,
+                                      
                                     ),
                                     label: Text(
                                       'Sign in with Google',

@@ -37,11 +37,15 @@ class UserModel extends Equatable {
 
   // Factory constructor to create UserModel from JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
+   
+    final firstName = json['first_name']?.toString() ?? '';
+    final lastName = json['last_name']?.toString() ?? '';
+
     return UserModel(
-      id: json['id'] ?? 0,
+      id: json['pk'] ?? 0,
       email: json['email'] ?? '',
-      fullName: json['full_name'] ?? '',
-      profilePicture: json['profile_picture'],
+      fullName: '$firstName $lastName'.trim(),
+      profilePicture: json['profile_image'],
       phoneNumber: json['phone_number'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -63,10 +67,10 @@ class UserModel extends Equatable {
   // Convert UserModel to JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'pk': id,
       'email': email,
       'full_name': fullName,
-      'profile_picture': profilePicture,
+      'profile_image': profilePicture,
       'phone_number': phoneNumber,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),

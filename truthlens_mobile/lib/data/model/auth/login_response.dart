@@ -80,9 +80,9 @@ class UserInfo extends Equatable {
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return UserInfo(
-      id: json['id'] ?? 0,
+      id: json['pk'] ?? 0,
       email: json['email'] ?? '',
-      fullName: json['full_name'] ?? '',
+      fullName:'${json['first_name'] as String? ?? ''} ${json['last_name'] as String? ?? ''}'.trim(),
       profilePicture: json['profile_picture'],
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
@@ -92,10 +92,10 @@ class UserInfo extends Equatable {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'pk': id,
       'email': email,
       'full_name': fullName,
-      'profile_picture': profilePicture,
+      'profile_image': profilePicture,
       'created_at': createdAt?.toIso8601String(),
     };
   }

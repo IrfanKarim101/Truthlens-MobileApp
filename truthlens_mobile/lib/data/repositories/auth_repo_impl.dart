@@ -29,7 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // Save user data locally
     if (response.success && response.data != null) {
-      await _saveUserData(response.data!.user);
+      await saveUserData(response.data!.user);
     }
 
     return response;
@@ -41,7 +41,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
     // Save user data locally
     if (response.success && response.data != null) {
-      await _saveUserData(response.data!.user);
+      await saveUserData(response.data!.user);
     }
 
     return response;
@@ -73,10 +73,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> saveToken(String token) async {
-    
     await _secureStorage.saveToken(token);
-    debugPrint('-------------------> Token saved: $token');
-
   }
 
   @override
@@ -85,9 +82,12 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  @override
   Future<UserModel?> getCurrentUser() async {
     final userJson = _sharedPrefs.getUserData();
+    //for debugging
+    debugPrint(
+      '----------------------------Retrieved user JSON from SharedPrefs: $userJson',
+    );
 
     if (userJson != null) {
       try {
@@ -95,7 +95,6 @@ class AuthRepositoryImpl implements AuthRepository {
         return UserModel.fromJson(userJson);
       } catch (e, st) {
         //FAIL ED DESERIALIZATION: This is your repeated login cause.
-        debugPrint('---------------------> Auto-Login Failed: UserModel Deserialization Error: $e');
         debugPrintStack(stackTrace: st);
 
         // CRITICAL STEP: Clear the corrupted user data and token to force a clean login.
@@ -105,6 +104,15 @@ class AuthRepositoryImpl implements AuthRepository {
       }
     }
     return null;
+  }
+
+  // Helper method to save user data
+  @override
+  Future<void> saveUserData(dynamic user) async {
+    final userModel = user;  
+    await _sharedPrefs.saveUserData(userModel.toJson());
+    await _secureStorage.saveUserId(userModel.id.toString());
+    await _secureStorage.saveUserEmail(userModel.email);
   }
 
   @override
@@ -154,8 +162,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       //   Step 4: Save user data locally if login is successful
       if (response.success && response.data != null) {
-        await _saveUserData(response.data!.user);
-        debugPrint('Google Sign-In successful, user data saved locally.');
+        await saveUserData(response.data!.user);
       }
 
       return response;
@@ -164,18 +171,5 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  // Helper method to save user data
-  Future<void> _saveUserData(dynamic user) async {
-    final userModel = user is UserModel
-        ? user
-        : UserModel.fromJson(user.toJson());
-    await _sharedPrefs.saveUserData(userModel.toJson());
-    await _secureStorage.saveUserId(userModel.id.toString());
-    await _secureStorage.saveUserEmail(userModel.email);
-
-    // verify by printing wether saved correctly
-    debugPrint('-------------------> User data saved: ${userModel.toJson()}');
-    debugPrint('-------------------> User ID saved: ${userModel.id}');
-    debugPrint('-------------------> User Email saved: ${userModel.email}');
-  }
+  
 }

@@ -11,6 +11,7 @@ import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
+  
 
   AuthBloc({required AuthRepository authRepository})
     : _authRepository = authRepository,
@@ -244,6 +245,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      final token = await _authRepository.getToken();
+      final user = await _authRepository.getCurrentUser();
+
+      if (token != null && user != null) {
+        emit(Authenticated(user: user, token: token));
+        return;
+      }
+
+      // If cached user is missing, fallback to Google silent sign-in
       final googleSignIn = GoogleSignIn();
       final isSignedIn = await googleSignIn.isSignedIn();
 
@@ -251,44 +261,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final googleUser = await googleSignIn.signInSilently();
 
         if (googleUser != null) {
-          // SUCCESS: Proceed with token check and authentication
-          final token = await _authRepository.getToken();
-          
-          if (token != null) {
-            // ... (existing logic to build UserModel and emit Authenticated)
-            final userModel = UserModel(
-              id: int.parse(googleUser.id),
-              email: googleUser.email,
-              fullName: googleUser.displayName ?? '',
-              profilePicture: googleUser.photoUrl ?? '',
-              // ... (rest of UserModel fields)
-              createdAt: DateTime.now(),
-            );
-            emit(Authenticated(user: userModel, token: token));
-            return;
-          }
+          final userModel = UserModel(
+            id: int.parse(googleUser.id),
+            email: googleUser.email,
+            fullName: googleUser.displayName ?? '',
+            profilePicture: googleUser.photoUrl ?? '',
+            createdAt: DateTime.now(),
+          );
+
+          // Save user locally
+          await _authRepository.saveUserData(userModel);
+
+          emit(Authenticated(user: userModel, token: token!));
+          return;
         }
-
-        // FALLBACK LOGIC: If signInSilently() returned null OR token is missing
-
-        // 1. Log the failure reason for debugging
-        debugPrint('Google silent sign-in failed or backend token is missing.');
-
-        // 2. Clear any potentially remnant local data to ensure a clean slate
-        // This helps prevent inconsistent state if the token was cleared but Google session remained
-        await _authRepository.clearLocalData();
-
-        // 3. Optional: Automatically trigger interactive sign-in
-        //    (This is typically done on the UI layer, but can be done here if necessary)
-        //    final user = await googleSignIn.signIn();
-        //    if (user != null) {
-        //        // Now dispatch a full GoogleLoginRequested event to hit the backend
-        //    }
       }
-      // Final exit: If all attempts failed, move to unauthenticated state.
+
       emit(const Unauthenticated());
     } catch (e) {
-      debugPrint('Google Auto-Login Catch Error: $e');
+      debugPrint('Auto-login error: $e');
       emit(const Unauthenticated());
     }
   }
@@ -379,7 +370,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } on TimeoutException catch (e) {
       emit(AuthError(message: e.message));
     } catch (e, st) {
-      // catch any unexpected error
+      emit(AuthError(message: 'An unexpected error occurred: ${e.toString()}'));
+      debugPrintStack(stackTrace: st);
     }
   }
 }

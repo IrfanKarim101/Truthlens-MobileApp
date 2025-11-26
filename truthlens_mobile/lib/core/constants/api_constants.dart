@@ -15,7 +15,7 @@ class ApiConstants {
   static const String analyzeVideo = '/auth/predict-video/';
 
   // History Endpoints
-  static const String getHistory = '/history/';
+  static const String getHistory = '/auth/scanned-data/';
   static const String getHistoryDetail = '/history/detail/';
 
   static const String getUserStats = '/history/stats/';

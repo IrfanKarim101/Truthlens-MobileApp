@@ -28,6 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<Offset> _subtitleSlideAnimation;
   late Animation<double> _subtitleFadeAnimation;
   late Animation<double> _dotsFadeAnimation;
+  bool _shouldAnimate = true;
 
   @override
   void initState() {
@@ -98,41 +99,30 @@ class _SplashScreenState extends State<SplashScreen>
     // Start animations in sequence
     _startAnimations();
     if (mounted) {
-      context.read<AuthBloc>().add(const AutoLoginRequested());
+      //context.read<AuthBloc>().add(const AutoLoginRequested());
       context.read<AuthBloc>().add(const GoogleAutoLoginRequested());
     }
   }
 
   void _startAnimations() async {
-    // Check 1: Check mounted status before any AnimationController is used.
-    if (!mounted) return;
-    await Future.delayed(const Duration(milliseconds: 300));
+    if (!_shouldAnimate || !mounted) return;
+
     _logoController.forward();
+    await Future.delayed(const Duration(milliseconds: 1200));
+    if (!_shouldAnimate || !mounted) return;
 
-    // Check 2: Check mounted status before the next chain of animations.
-    if (!mounted) return;
-    await Future.delayed(const Duration(milliseconds: 600));
     _textController.forward();
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (!_shouldAnimate || !mounted) return;
 
-    // Check 3: Check mounted status.
-    if (!mounted) return;
-    await Future.delayed(const Duration(milliseconds: 400));
     _subtitleController.forward();
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (!_shouldAnimate || !mounted) return;
 
-    // Check 4: Check mounted status.
-    if (!mounted) return;
-    await Future.delayed(const Duration(milliseconds: 300));
     _dotsController.forward();
 
-    // Navigate to next screen after animations
-    await Future.delayed(const Duration(milliseconds: 2000));
-
-    // Determine the initial route (login or home) from the splash service
-    final route = await SplashService.getInitialRoute();
-
-    // // Check 5: Final check before attempting navigation (which disposes the widget)
-    if (!mounted) return;
-    // Navigator.pushReplacementNamed(context, route);
+    // Wait a bit more to ensure animations are seen
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   @override
@@ -141,6 +131,7 @@ class _SplashScreenState extends State<SplashScreen>
     _textController.dispose();
     _subtitleController.dispose();
     _dotsController.dispose();
+    _shouldAnimate = false;
     super.dispose();
   }
 
@@ -148,12 +139,18 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
+        listener: (context, state) async {
+          //forces to show splash for at least 3.5 seconds
+          await Future.delayed(const Duration(milliseconds: 3500));
+          _shouldAnimate = false;
+          _logoController.stop();
+          _textController.stop();
+          _subtitleController.stop();
+          _dotsController.stop();
+
           if (state is Authenticated) {
-            // Navigate to home screen
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is Unauthenticated) {
-            // Navigate to login screen
             Navigator.pushReplacementNamed(context, AppRoutes.login);
           } else if (state is AuthError) {
             // Maybe show error, then go to login

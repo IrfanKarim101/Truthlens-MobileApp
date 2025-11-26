@@ -4,7 +4,7 @@ import 'package:truthlens_mobile/core/constants/api_constants.dart';
 import 'package:truthlens_mobile/core/errors/exceptions.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
 import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
-import 'package:http_parser/http_parser.dart';
+
 
 class AnalysisApiService {
   final DioClient _dioClient;
