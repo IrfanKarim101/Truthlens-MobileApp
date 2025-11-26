@@ -1,253 +1,175 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
+import 'package:truthlens_mobile/business_logic/blocs/history/bloc/history_bloc.dart';
+import 'package:truthlens_mobile/core/injection_container.dart';
 
-class AnalysisHistoryScreen extends StatelessWidget {
+class AnalysisHistoryScreen extends StatefulWidget {
   const AnalysisHistoryScreen({super.key});
+
+  @override
+  State<AnalysisHistoryScreen> createState() => _AnalysisHistoryScreenState();
+}
+
+class _AnalysisHistoryScreenState extends State<AnalysisHistoryScreen> {
+  late final HistoryBloc _historyBloc;
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _historyBloc = getIt<HistoryBloc>();
+    _historyBloc.add(HistoryFetched(page: 1, limit: 10));
+
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      _historyBloc.add(HistoryFetchedMore());
+    }
+  }
+
+  @override
+  void dispose() {
+    _historyBloc.close();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/img3.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
+      body: BlocProvider<HistoryBloc>.value(
+        value: _historyBloc,
         child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.black.withOpacity(0.5),
-                Colors.black.withOpacity(0.3),
-                Colors.purple.withOpacity(0.1),
-                Colors.purple.withOpacity(0.3),
-              ],
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/img3.jpg'),
+              fit: BoxFit.cover,
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Analysis History',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'View all your scans',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Statistics Cards
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildStatItem(
-                              count: '8',
-                              label: 'Total Scans',
-                              color: Colors.white,
-                            ),
-                            Container(
-                              width: 1,
-                              height: 40,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.5),
+                  Colors.black.withOpacity(0.3),
+                  Colors.purple.withOpacity(0.1),
+                  Colors.purple.withOpacity(0.3),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
                               color: Colors.white.withOpacity(0.2),
-                            ),
-                            _buildStatItem(
-                              count: '5',
-                              label: 'Authentic',
-                              color: Colors.greenAccent,
-                            ),
-                            Container(
                               width: 1,
-                              height: 40,
-                              color: Colors.white.withOpacity(0.2),
                             ),
-                            _buildStatItem(
-                              count: '3',
-                              label: 'Deepfakes',
-                              color: Colors.redAccent,
+                          ),
+                          child: IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Analysis History',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'View all your scans',
+                              style: TextStyle(fontSize: 13, color: Colors.white70),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 20),
-
-                // History List
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    children: [
-                      _buildHistoryItem(
-                        fileName: 'portrait_image.jpg',
-                        isImage: true,
-                        isAuthentic: true,
-                        confidence: '98% confidence',
-                        timeAgo: '3 hours ago', onTap: () { 
-                          Navigator.pushNamed(context, AppRoutes.analysisReport);
-                         },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'video_sample.mp4',
-                        isImage: false,
-                        isAuthentic: false,
-                        confidence: '87% confidence',
-                        timeAgo: '5 hours ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'group_photo.jpg',
-                        isImage: true,
-                        isAuthentic: true,
-                        confidence: '95% confidence',
-                        timeAgo: '1 day ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'interview_clip.mp4',
-                        isImage: false,
-                        isAuthentic: true,
-                        confidence: '92% confidence',
-                        timeAgo: '1 day ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'profile_pic.jpg',
-                        isImage: true,
-                        isAuthentic: false,
-                        confidence: '78% confidence',
-                        timeAgo: '2 days ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'family_video.mp4',
-                        isImage: false,
-                        isAuthentic: true,
-                        confidence: '96% confidence',
-                        timeAgo: '3 days ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'selfie_001.jpg',
-                        isImage: true,
-                        isAuthentic: true,
-                        confidence: '99% confidence',
-                        timeAgo: '4 days ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildHistoryItem(
-                        fileName: 'presentation.mp4',
-                        isImage: false,
-                        isAuthentic: false,
-                        confidence: '82% confidence',
-                        timeAgo: '5 days ago', onTap: () {  },
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                  // History List
+                  Expanded(
+                    child: BlocBuilder<HistoryBloc, HistoryState>(
+                      builder: (context, state) {
+                        if (state is HistoryLoading || state is HistoryInitial) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (state is HistoryLoadSuccess) {
+                          final items = state.items;
+                          if (items.isEmpty) {
+                            return const Center(child: Text('No history yet', style: TextStyle(color: Colors.white)));
+                          }
+                          return ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                            itemCount: items.length + (state.hasMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index >= items.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              }
+                              final it = items[index];
+                              return Column(
+                                children: [
+                                  _buildHistoryItem(
+                                    fileName: it.fileName,
+                                    isImage: it.isImage,
+                                    isAuthentic: it.isAuthentic,
+                                    confidence: it.confidenceText,
+                                    timeAgo: it.timeAgo,
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.analysisReport,
+                                        arguments: it,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                        if (state is HistoryFailure) {
+                          return Center(child: Text('Error: ${state.message}', style: const TextStyle(color: Colors.white)));
+                        }
+                        return const SizedBox();
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required String count,
-    required String label,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Text(
-          count,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7)),
-        ),
-      ],
     );
   }
 
@@ -298,9 +220,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                         isAuthentic
                             ? Icons.check_circle_outline
                             : Icons.warning_amber_outlined,
-                        color: isAuthentic
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
+                        color: isAuthentic ? Colors.greenAccent : Colors.redAccent,
                         size: 28,
                       ),
                     ),
@@ -315,17 +235,15 @@ class AnalysisHistoryScreen extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                isImage
-                                    ? Icons.image_outlined
-                                    : Icons.videocam_outlined,
-                                color: Colors.white.withOpacity(0.6),
+                                isImage ? Icons.image_outlined : Icons.videocam_outlined,
+                                color: Colors.white70,
                                 size: 16,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   fileName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
@@ -337,14 +255,10 @@ class AnalysisHistoryScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            isAuthentic
-                                ? 'Authentic • $confidence'
-                                : 'Deepfake Detected • $confidence',
+                            isAuthentic ? 'Authentic • $confidence' : 'Deepfake Detected • $confidence',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isAuthentic
-                                  ? Colors.greenAccent
-                                  : Colors.redAccent,
+                              color: isAuthentic ? Colors.greenAccent : Colors.redAccent,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -353,7 +267,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
                             timeAgo,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white70,
                             ),
                           ),
                         ],
@@ -362,12 +276,7 @@ class AnalysisHistoryScreen extends StatelessWidget {
 
                     const SizedBox(width: 12),
 
-                    // Arrow Icon
-                    Icon(
-                      Icons.chevron_right,
-                      color: Colors.white.withOpacity(0.4),
-                      size: 24,
-                    ),
+                    const Icon(Icons.chevron_right, color: Colors.white38, size: 24),
                   ],
                 ),
               ),

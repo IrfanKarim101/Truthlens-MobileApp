@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
+import 'package:truthlens_mobile/business_logic/blocs/history/bloc/history_bloc.dart';
 import 'package:truthlens_mobile/business_logic/blocs/upload/bloc/upload_bloc.dart';
 import 'package:truthlens_mobile/core/injection_container.dart';
 import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
@@ -10,6 +11,7 @@ import 'package:truthlens_mobile/presentation/screens/auth/login_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/auth/signup_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/history/analysis_report.dart';
 import 'package:truthlens_mobile/presentation/screens/history/history.dart';
+import 'package:truthlens_mobile/presentation/screens/history/history_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/home/home_screen.dart';
 import 'package:truthlens_mobile/presentation/screens/splash/splash_screen.dart';
 // import 'package:truthlens_mobile/presentation/screens/test/test_auth.dart';
@@ -37,6 +39,8 @@ class TruthLensApp extends StatelessWidget {
         BlocProvider<AuthBloc>(create: (context) => getIt<AuthBloc>()),
         // Upload BLoC - Available throughout the app
         BlocProvider<UploadBloc>(create: (context) => getIt<UploadBloc>()),
+        // History BLoC - Available throughout the app
+        BlocProvider<HistoryBloc>(create: (context) => getIt<HistoryBloc>()),
       ],
       child: MaterialApp(
         title: 'TruthLens',
@@ -58,7 +62,7 @@ class TruthLensApp extends StatelessWidget {
           AppRoutes.uploadVideo: (_) => const UploadVideoScreen(),
           AppRoutes.about: (_) => const AboutScreen(),
           //AppRoutes.analysisReport: (_) =>
-             // const AnalysisReportScreen(result: null),
+          // const AnalysisReportScreen(result: null),
           AppRoutes.history: (_) => const AnalysisHistoryScreen(),
           //'/test-auth': (context) => const AuthTestScreen(),
         },
@@ -67,12 +71,10 @@ class TruthLensApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           // Handle routes with parameters
           if (settings.name == AppRoutes.analysisReport) {
-           final AnalysisResult? result = settings.arguments as AnalysisResult?;
+            final AnalysisResult? result =
+                settings.arguments as AnalysisResult?;
             return MaterialPageRoute(
-              builder: (context) => AnalysisReportScreen(
-                result: result,
-              ),
-              
+              builder: (context) => AnalysisReportScreen(result: result),
             );
           }
 

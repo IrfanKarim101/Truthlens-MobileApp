@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:truthlens_mobile/core/network/api_intercepter.dart';
 import '../constants/api_constants.dart';
-import 'package:truthlens_mobile/core/errors/exceptions.dart';
+import '../errors/exceptions.dart';
+import 'api_intercepter.dart';
 
 class DioClient {
   late final Dio _dio;
@@ -13,17 +13,12 @@ class DioClient {
         baseUrl: ApiConstants.baseUrl,
         connectTimeout: ApiConstants.connectTimeout,
         receiveTimeout: ApiConstants.receiveTimeout,
-        validateStatus: (status) {
-          // Accept all status codes to handle them manually
-          return status! < 500;
-        },
+        validateStatus: (status) => status! < 500, // handle manually
       ),
     );
 
-    // Add interceptors
     _dio.interceptors.add(interceptor);
-    
-    // Add logging interceptor in debug mode
+
     if (kDebugMode) {
       _dio.interceptors.add(
         LogInterceptor(
@@ -37,7 +32,7 @@ class DioClient {
     }
   }
 
-  // GET Request
+  // Generic GET request
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -49,13 +44,16 @@ class DioClient {
         queryParameters: queryParameters,
         options: options,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
-  // POST Request
+  // Generic POST request
   Future<Response> post(
     String path, {
     dynamic data,
@@ -69,15 +67,16 @@ class DioClient {
         queryParameters: queryParameters,
         options: options,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      //debug print
-      debugPrint('Dio POST Error: ${e.message}');
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
-  // POST with FormData (for file uploads)
+  // POST with FormData (file upload)
   Future<Response> postFormData(
     String path,
     FormData formData, {
@@ -93,13 +92,16 @@ class DioClient {
         options: options,
         onSendProgress: onSendProgress,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
-  // PUT Request
+  // Generic PUT request
   Future<Response> put(
     String path, {
     dynamic data,
@@ -113,33 +115,16 @@ class DioClient {
         queryParameters: queryParameters,
         options: options,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
-  // PATCH Request
-  Future<Response> patch(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    try {
-      final response = await _dio.patch(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-      );
-      return response;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // DELETE Request
+  // Generic DELETE request
   Future<Response> delete(
     String path, {
     dynamic data,
@@ -153,9 +138,12 @@ class DioClient {
         queryParameters: queryParameters,
         options: options,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
@@ -175,52 +163,84 @@ class DioClient {
         queryParameters: queryParameters,
         options: options,
       );
+      _checkHttpError(response);
       return response;
     } on DioException catch (e) {
-      throw _handleError(e);
+      throw _handleDioException(e);
+    } catch (e) {
+      throw UnknownException(e.toString());
     }
   }
 
-  // Error handler
-  Exception _handleError(DioException error) {
+  // --------------------
+  // ERROR HANDLING
+  // --------------------
+
+  Exception _handleDioException(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return TimeoutException('Connection timeout');
-      
-      case DioExceptionType.badResponse:
-        return ServerException(_extractErrorMessage(error.response?.data)
-        );
-      
+        return TimeoutException();
+
       case DioExceptionType.connectionError:
-        return NetworkException('No internet connection');
-      
+        return NetworkException();
+
       case DioExceptionType.cancel:
-        return CancelledException('Request cancelled');
-      
+        return CancelledException();
+
+      case DioExceptionType.badResponse:
+        return _mapHttpStatusToException(error.response);
+
       default:
-        return UnknownException('Something went wrong');
+        return UnknownException(error.message ?? 'An unknown error occurred');
     }
   }
 
+  // Map HTTP status codes to your exceptions
+  TruthLensException _mapHttpStatusToException(Response? response) {
+    if (response == null) return ServerException();
+
+    final msg = _extractErrorMessage(response.data);
+    switch (response.statusCode) {
+      case 400:
+        return BadRequestException(msg, 400);
+      case 401:
+        return UnauthorizedException(msg, 401);
+      case 403:
+        return ForbiddenException(msg, 403);
+      case 404:
+        return NotFoundException(msg, 404);
+      case 409:
+        return ConflictException(msg, 409);
+      case 500:
+        return InternalServerException(msg, 500);
+      default:
+        return ServerException(msg, response.statusCode);
+    }
+  }
+
+  // Extract meaningful error message from response
   String _extractErrorMessage(dynamic data) {
     if (data == null) return 'Unknown error occurred';
-    
+
     if (data is Map<String, dynamic>) {
-      return data['message'] ?? 
-             data['error'] ?? 
-             data['detail'] ?? 
-             'Unknown error occurred';
+      return data['message'] ??
+          data['error'] ??
+          data['detail'] ??
+          'Unknown error occurred';
     }
-    
+
     return data.toString();
   }
 
+  // Optional: manually check for HTTP errors if validateStatus allows them
+  void _checkHttpError(Response response) {
+    if (response.statusCode != null && response.statusCode! >= 400) {
+      throw _mapHttpStatusToException(response);
+    }
+  }
 
-
-  // Expose Dio instance for advanced usage if needed
+  // Expose Dio instance for advanced use
   Dio get dio => _dio;
-
 }
-

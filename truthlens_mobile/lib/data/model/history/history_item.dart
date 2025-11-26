@@ -2,11 +2,11 @@ import 'package:equatable/equatable.dart';
 import '../analysis/analysis_result.dart';
 
 class HistoryItem extends Equatable {
-  final String id;
+  final int id;
   final String fileName;
   final String fileType; // 'image' or 'video'
   final bool isAuthentic;
-  final int confidence;
+  final double confidence;
   final String thumbnailUrl;
   final DateTime createdAt;
   final String status; // 'completed', 'processing', 'failed'
@@ -24,14 +24,14 @@ class HistoryItem extends Equatable {
 
   factory HistoryItem.fromJson(Map<String, dynamic> json) {
     return HistoryItem(
-      id: json['id']?.toString() ?? '',
-      fileName: json['file_name'] ?? '',
+      id: json['id'] ?? '00',
+      fileName: json['file_name'] ?? 'portrait.jpg',
       fileType: json['file_type'] ?? 'image',
-      isAuthentic: json['is_authentic'] ?? false,
-      confidence: json['confidence'] ?? 0,
+      isAuthentic: json['prediction'] == 'real' ? true : false,
+      confidence: json['score'] ?? 0,
       thumbnailUrl: json['thumbnail_url'] ?? '',
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+      createdAt: json['uploaded_at'] != null
+          ? DateTime.parse(json['uploaded_at'])
           : DateTime.now(),
       status: json['status'] ?? 'completed',
     );
@@ -93,8 +93,18 @@ class HistoryItem extends Equatable {
   // Get formatted date
   String get formattedDate {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[createdAt.month - 1]} ${createdAt.day}, ${createdAt.year}';
   }
@@ -109,13 +119,19 @@ class HistoryItem extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        fileName,
-        fileType,
-        isAuthentic,
-        confidence,
-        thumbnailUrl,
-        createdAt,
-        status,
-      ];
+    id,
+    fileName,
+    fileType,
+    isAuthentic,
+    confidence,
+    thumbnailUrl,
+    createdAt,
+    status,
+  ];
+
+  get score => null;
+
+  get prediction => null;
+
+  String get uploadedAt => createdAt.toIso8601String();
 }

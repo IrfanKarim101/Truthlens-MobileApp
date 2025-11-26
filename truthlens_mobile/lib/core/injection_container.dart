@@ -13,9 +13,12 @@ import 'package:truthlens_mobile/data/data_source/remote/analysis_api_service.da
 import 'package:truthlens_mobile/data/data_source/remote/auth_api_service.dart';
 import 'package:truthlens_mobile/data/data_source/remote/history_api_service.dart';
 import 'package:truthlens_mobile/data/repositories/analysis_repo.dart';
+import 'package:truthlens_mobile/data/repositories/history_repo.dart';
+import 'package:truthlens_mobile/data/repositories/history_repo_impl.dart';
 import 'package:truthlens_mobile/data/repositories/analysis_repo_impl.dart';
 import 'package:truthlens_mobile/data/repositories/auth_repo.dart';
 import 'package:truthlens_mobile/data/repositories/auth_repo_impl.dart';
+import 'package:truthlens_mobile/business_logic/blocs/history/bloc/history_bloc.dart';
 
 // Core
 
@@ -102,12 +105,12 @@ Future<void> initializeDependencies() async {
   );
 
   // History Repository
-  // getIt.registerLazySingleton<HistoryRepository>(
-  //   () => HistoryRepositoryImpl(
-  //     apiService: getIt<HistoryApiService>(),
-  //     sharedPrefs: getIt<SharedPrefsHelper>(),
-  //   ),
-  // );
+  getIt.registerLazySingleton<HistoryRepository>(
+    () => HistoryRepositoryImpl(
+      apiService: getIt<HistoryApiService>(),
+      sharedPrefs: getIt<SharedPrefsHelper>(),
+    ),
+  );
 
   // ==================== BLOCS ====================
 
@@ -125,9 +128,9 @@ Future<void> initializeDependencies() async {
   getIt.registerFactory<UploadBloc>(() => UploadBloc());
 
   // History BLoC
-  // getIt.registerFactory<HistoryBloc>(
-  //   () => HistoryBloc(historyRepository: getIt<HistoryRepository>()),
-  // );
+  getIt.registerFactory<HistoryBloc>(
+    () => HistoryBloc(historyRepository: getIt<HistoryRepository>()),
+  );
 
   // ==================== Cubits ====================
   // getIt.registerLazySingleton<ConnectivityCubit>(() => ConnectivityCubit());

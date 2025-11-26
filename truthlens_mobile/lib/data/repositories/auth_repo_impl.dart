@@ -84,10 +84,6 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserModel?> getCurrentUser() async {
     final userJson = _sharedPrefs.getUserData();
-    //for debugging
-    debugPrint(
-      '----------------------------Retrieved user JSON from SharedPrefs: $userJson',
-    );
 
     if (userJson != null) {
       try {
@@ -109,7 +105,7 @@ class AuthRepositoryImpl implements AuthRepository {
   // Helper method to save user data
   @override
   Future<void> saveUserData(dynamic user) async {
-    final userModel = user;  
+    final userModel = user;
     await _sharedPrefs.saveUserData(userModel.toJson());
     await _secureStorage.saveUserId(userModel.id.toString());
     await _secureStorage.saveUserEmail(userModel.email);
@@ -170,6 +166,4 @@ class AuthRepositoryImpl implements AuthRepository {
       rethrow;
     }
   }
-
-  
 }

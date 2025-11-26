@@ -141,9 +141,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
         // Convert API user to domain UserModel then emit authenticated state
         final apiUser = response.data!.user;
-        debugPrint(
-          '======================================> Signup User: ${apiUser.toJson()}',
-        );
+       
         final userModel = UserModel(
           id: apiUser.id,
           email: apiUser.email,

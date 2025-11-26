@@ -3,6 +3,7 @@
 import 'package:truthlens_mobile/core/constants/api_constants.dart';
 import 'package:truthlens_mobile/core/errors/exceptions.dart';
 import 'package:truthlens_mobile/core/network/dio_client.dart';
+import 'package:truthlens_mobile/data/model/analysis/analysis_result.dart';
 import 'package:truthlens_mobile/data/model/history/delete_history.dart';
 import 'package:truthlens_mobile/data/model/history/history_details_response.dart';
 import 'package:truthlens_mobile/data/model/history/history_response.dart';
@@ -166,6 +167,20 @@ class HistoryApiService {
       );
 
       return response.data['data']['download_url'] ?? '';
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+
+  // Get analysis result by history ID
+  Future<AnalysisResult> getAnalysisResult(String id) async {
+    try {
+      final response = await _dioClient.get(
+        '${ApiConstants.getHistoryDetail}/$id/result',
+      );
+
+      return AnalysisResult.fromJson(response.data);
     } catch (e) {
       throw ServerException(e.toString());
     }
