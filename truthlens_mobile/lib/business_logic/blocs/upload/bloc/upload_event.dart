@@ -21,3 +21,5 @@ final class UploadProgressChanged extends UploadEvent {
 final class UploadCancelled extends UploadEvent {}
 
 final class UploadAnalyzingStarted extends UploadEvent {}
+
+

@@ -18,6 +18,7 @@ import 'package:truthlens_mobile/presentation/screens/splash/splash_screen.dart'
 import 'package:truthlens_mobile/presentation/screens/upload/image_upload.dart';
 import 'package:truthlens_mobile/presentation/screens/upload/video_upload.dart';
 
+
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();

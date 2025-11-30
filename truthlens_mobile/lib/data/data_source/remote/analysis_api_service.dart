@@ -43,7 +43,7 @@ class AnalysisApiService {
   }) async {
     try {
       FormData formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile( //? changed 'video' to 'file' to match backend
+        'video': await MultipartFile.fromFile( 
           videoFile.path,
           filename: videoFile.path.split('/').last,
         ),
