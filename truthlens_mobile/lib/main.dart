@@ -65,7 +65,7 @@ class TruthLensApp extends StatelessWidget {
           //AppRoutes.analysisReport: (_) =>
           // const AnalysisReportScreen(result: null),
           AppRoutes.history: (_) => const AnalysisHistoryScreen(),
-          //'/test-auth': (context) => const AuthTestScreen(),
+          //'/test-auth': (context) => const AuthTestScreen(), // For testing purposes
         },
 
         // Route generator for dynamic routes

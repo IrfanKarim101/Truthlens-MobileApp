@@ -1,6 +1,6 @@
 class ApiConstants {
   // Base URL ---- Dummy URL, replace with actual server IP or domain ----
-  static const String baseUrl = 'http://192.168.1.13:8000/';
+  static const String baseUrl = 'http://192.168.1.15:8000/';
 
   // Auth Endpoints
   static const String login = '/auth/login/';

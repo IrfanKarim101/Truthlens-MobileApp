@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:toastification/toastification.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_state.dart';
 import 'package:truthlens_mobile/business_logic/blocs/auth/auth_bloc.dart';
 import 'package:truthlens_mobile/presentation/routes/app_router.dart';
@@ -31,10 +32,41 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (state is AuthLoading) {
+            // Show loading indicator
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      'Signing in...',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            // Hide loading indicator
+            Navigator.pop(context);
+          }
           if (state is Authenticated) {
+            final username = state.user.firstName;
+            toastification.show(
+              context: context,
+              type: ToastificationType.success,
+              style: ToastificationStyle.fillColored,
+              title: Text("Welcome $username!"),
+              autoCloseDuration: const Duration(seconds: 4),
+            );
+
             Navigator.pushReplacementNamed(context, AppRoutes.home);
           } else if (state is AuthError) {
-            debugPrint('---------------------------------> Login Error: ${state.message}');
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(content: Text(state.message)));
@@ -378,7 +410,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                       'assets/images/google_logo.png',
                                       height: 24,
                                       width: 24,
-                                      
                                     ),
                                     label: Text(
                                       'Sign in with Google',

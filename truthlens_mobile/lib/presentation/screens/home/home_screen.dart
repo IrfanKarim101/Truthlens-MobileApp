@@ -22,13 +22,37 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _historyBloc = getIt<HistoryBloc>();
-    _historyBloc.add(HistoryFetched(page: 1, limit: 3));
+    _historyBloc.add(HistoryFetched(page: 1, limit: 5));
   }
 
   @override
   void dispose() {
     _historyBloc.close();
     super.dispose();
+  }
+
+  void calculateStats(Map<String, dynamic> response) {
+    final results = response['results'] as List<dynamic>;
+
+    int total = response['total_results'] ?? results.length;
+
+    int realCount = 0;
+    int fakeCount = 0;
+
+    for (var item in results) {
+      if (item['prediction'] == 'real') {
+        realCount++;
+      } else if (item['prediction'] == 'fake') {
+        fakeCount++;
+      }
+    }
+
+    double realPercent = (realCount / total) * 100;
+    double fakePercent = (fakeCount / total) * 100;
+
+    print("Total Scans: $total");
+    print("Real: $realCount  (${realPercent.toStringAsFixed(1)}%)");
+    print("Fake: $fakeCount  (${fakePercent.toStringAsFixed(1)}%)");
   }
 
   @override
@@ -38,6 +62,18 @@ class _HomeScreenState extends State<HomeScreen> {
         create: (_) => _historyBloc,
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
+            if (state is AuthLoading) {
+              // Show loading indicator or similar
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) =>
+                    Center(child: CircularProgressIndicator()),
+              );
+            } else {
+              // Hide loading indicator
+              Navigator.of(context, rootNavigator: true).pop();
+            }
             if (state is Unauthenticated) {
               // If user is logged out, navigate to login screen
               Navigator.pushReplacementNamed(context, AppRoutes.login);
@@ -129,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   context.read<AuthBloc>().add(
                                     const LogoutRequested(),
                                   );
-                                  Navigator.pushNamed(context, AppRoutes.login);
+                                  // Navigator.pushNamed(context, AppRoutes.login);
                                 },
                                 icon: Icon(
                                   Icons.logout,
@@ -203,7 +239,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           iconColor: Colors.lightBlueAccent,
                           onTap: () {
-                            // TODO: Navigate to upload image screen
                             Navigator.pushNamed(context, AppRoutes.uploadImage);
                           },
                         ),

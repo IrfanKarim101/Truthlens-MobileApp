@@ -21,21 +21,57 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
   bool _isAnalyzingPhase = false;
   double _progress = 0.0;
 
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
 
-      // Run face detection immediately after selecting an image.
+  Future<void> _pickImage() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.3),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.white),
+                title: const Text("Open Camera",
+                    style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickFromCamera();
+                },
+              ),
+              ListTile(
+                leading:
+                    const Icon(Icons.photo_library, color: Colors.white),
+                title: const Text("Select from Gallery",
+                    style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickFromGallery();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image =
+        await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() => _selectedImage = File(image.path));
       final hasFace = await _detectFace(_selectedImage!);
+
       if (!hasFace) {
-        // Discard the selected image and notify the user
-        setState(() {
-          _selectedImage = null;
-        });
+        setState(() => _selectedImage = null);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -47,41 +83,58 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     }
   }
 
-  Future<void> _analyzeImage(BuildContext ctx) async {
-    if (_selectedImage == null) return;
-    // Dispatch upload event to the UploadBloc using a BuildContext
-    // that is beneath the BlocProvider in the widget tree.
-    final bloc = ctx.read<UploadBloc>();
-    bloc.add(UploadImageRequested(_selectedImage!));
+  Future<void> _pickFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image =
+        await picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      setState(() => _selectedImage = File(image.path));
+      final hasFace = await _detectFace(_selectedImage!);
+
+      if (!hasFace) {
+        setState(() => _selectedImage = null);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No face detected!!'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
+  // --------------------------
+  // COMPRESS IMAGE
+  // --------------------------
   Future<File> _compressImage(File file) async {
-  final bytes = await file.readAsBytes();
-  final image = img.decodeImage(bytes);
-  final resized = img.copyResize(
-    image!,
-    width: 1024,
-    height: 1024,
-    maintainAspect: true,
-  );
+    final bytes = await file.readAsBytes();
+    final image = img.decodeImage(bytes);
+    final resized = img.copyResize(
+      image!,
+      width: 1024,
+      height: 1024,
+      maintainAspect: true,
+    );
 
-  final compressedBytes = img.encodeJpg(resized, quality: 85);
+    final compressedBytes = img.encodeJpg(resized, quality: 85);
+    final tempPath = '${file.path}_compressed.jpg';
+    final compressed = File(tempPath);
+    await compressed.writeAsBytes(compressedBytes);
+    return compressed;
+  }
 
-  final tempPath = '${file.path}_compressed.jpg';
-  final compressed = File(tempPath);
-  await compressed.writeAsBytes(compressedBytes);
-
-  return compressed;
-}
-
+  // --------------------------
+  // FACE DETECTOR
+  // --------------------------
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
-      // You only need basic detection, no landmarks or contours needed
       performanceMode: FaceDetectorMode.accurate,
     ),
   );
 
-  String _detectionResult = ''; // Stores "Face detected" or "No face detected"
+  String _detectionResult = '';
   bool _isDetecting = false;
 
   Future<bool> _detectFace(File imageFile) async {
@@ -91,33 +144,33 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     });
 
     try {
-     
-      //compress image before detection
       final compressedImage = await _compressImage(imageFile);
       final List<Face> faces = await _faceDetector.processImage(
         InputImage.fromFile(compressedImage),
       );
 
       setState(() {
-        if (faces.isNotEmpty) {
-          _detectionResult = ' Face detected (${faces.length} faces)';
-        } else {
-          _detectionResult = ' No face detected';
-        }
+        _detectionResult =
+            faces.isNotEmpty ? ' Face detected (${faces.length})' : ' No face detected';
       });
 
       return faces.isNotEmpty;
     } catch (e) {
-      setState(() {
-        _detectionResult = 'Error during detection';
-      });
-      print('------------------------------Face detection error: $e');
+      setState(() => _detectionResult = 'Error during detection');
+      print('Face detection error: $e');
       return false;
     } finally {
-      setState(() {
-        _isDetecting = false;
-      });
+      setState(() => _isDetecting = false);
     }
+  }
+
+  // --------------------------
+  // ANALYZE BUTTON HANDLER
+  // --------------------------
+  Future<void> _analyzeImage(BuildContext ctx) async {
+    if (_selectedImage == null) return;
+    final bloc = ctx.read<UploadBloc>();
+    bloc.add(UploadImageRequested(_selectedImage!));
   }
 
   @override
@@ -126,6 +179,9 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     super.dispose();
   }
 
+  // --------------------------
+  // UI BUILDER
+  // --------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,12 +195,6 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 _isAnalyzingPhase = false;
                 _progress = state.progress;
               });
-              // If progress reached 1.0 we'll wait for analyzing event
-              if (state.progress >= 1.0) {
-                setState(() {
-                  _isUploading = false;
-                });
-              }
             } else if (state is UploadAnalyzing) {
               setState(() {
                 _isAnalyzingPhase = true;
@@ -162,13 +212,11 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 const SnackBar(content: Text('Analysis completed')),
               );
 
-              try {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.analysisReport,
-                  arguments: (state).result,
-                );
-              } catch (_) {}
+              Navigator.pushNamed(
+                context,
+                AppRoutes.analysisReport,
+                arguments: state.result,
+              );
             } else if (state is UploadFailure) {
               setState(() {
                 _isAnalyzingPhase = false;
@@ -176,234 +224,131 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 _progress = 0.0;
               });
 
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.exception.message)));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.exception.message)),
+              );
             }
           },
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
+          child: _buildMainUI(context),
+        ),
+      ),
+    );
+  }
+
+  // --------------------------
+  // MAIN UI WRAPPED
+  // --------------------------
+  Widget _buildMainUI(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/img3.jpg'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withOpacity(0.5),
+              Colors.black.withOpacity(0.3),
+              Colors.purple.withOpacity(0.1),
+              Colors.purple.withOpacity(0.3),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildGlassUploadSection(),
+              if (_selectedImage != null) _buildAnalyzeSection(context),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --------------------------
+  // HEADER UI
+  // --------------------------
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        children: [
+          Container(
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/img3.jpg'),
-                fit: BoxFit.cover,
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 1,
               ),
             ),
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Upload Image',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Detect deepfakes in photos',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------
+  // GLASS UPLOAD AREA
+  // --------------------------
+  Widget _buildGlassUploadSection() {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.5),
-                    Colors.black.withOpacity(0.3),
-                    Colors.purple.withOpacity(0.1),
-                    Colors.purple.withOpacity(0.3),
-                  ],
+                color: Colors.white.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 2,
+                  strokeAlign: BorderSide.strokeAlignInside,
                 ),
               ),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        children: [
-                          // Back Button
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                                width: 1,
-                              ),
-                            ),
-                            child: IconButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              icon: Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Upload Image',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Detect deepfakes in photos',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white.withOpacity(0.6),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Upload Area
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 2,
-                                  strokeAlign: BorderSide.strokeAlignInside,
-                                ),
-                              ),
-                              child: _selectedImage == null
-                                  ? _buildUploadPrompt()
-                                  : _buildImagePreview(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Analyze Button (shown when image is selected)
-                    if (_selectedImage != null)
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          children: [
-                            if (_isUploading ||
-                                (_progress > 0.0 && _progress < 1.0))
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: LinearProgressIndicator(
-                                  value: _progress > 0 ? _progress : null,
-                                  backgroundColor: Colors.white24,
-                                  valueColor: AlwaysStoppedAnimation(
-                                    Colors.lightBlueAccent,
-                                  ),
-                                ),
-                              ),
-                            Container(
-                              width: double.infinity,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.lightBlueAccent,
-                                    Colors.purpleAccent.shade100,
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.lightBlueAccent.withOpacity(
-                                      0.3,
-                                    ),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                ],
-                              ),
-                              child: Builder(
-                                builder: (buttonCtx) {
-                                  return ElevatedButton(
-                                    onPressed:
-                                        (_isUploading ||
-                                            _isAnalyzingPhase ||
-                                            _isDetecting)
-                                        ? null
-                                        : () => _analyzeImage(buttonCtx),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: _isAnalyzingPhase
-                                        ? SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.5,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          )
-                                        : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.analytics_outlined,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Analyze Image',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedImage = null;
-                                });
-                              },
-                              child: Text(
-                                'Choose Different Image',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
+              child: _selectedImage == null
+                  ? _buildUploadPrompt()
+                  : _buildImagePreview(),
             ),
           ),
         ),
@@ -411,6 +356,116 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     );
   }
 
+  // --------------------------
+  // ANALYZE BUTTON SECTION
+  // --------------------------
+  Widget _buildAnalyzeSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          if (_isUploading || (_progress > 0.0 && _progress < 1.0))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: LinearProgressIndicator(
+                value: _progress > 0 ? _progress : null,
+                backgroundColor: Colors.white24,
+                valueColor: const AlwaysStoppedAnimation(
+                  Colors.lightBlueAccent,
+                ),
+              ),
+            ),
+
+          // Analyze button
+          Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.lightBlueAccent,
+                  Colors.purpleAccent.shade100,
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.lightBlueAccent.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Builder(
+              builder: (buttonCtx) {
+                return ElevatedButton(
+                  onPressed: (_isUploading ||
+                          _isAnalyzingPhase ||
+                          _isDetecting)
+                      ? null
+                      : () => _analyzeImage(buttonCtx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: _isAnalyzingPhase
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.analytics_outlined,
+                                color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Analyze Image',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Choose another image
+          TextButton(
+            onPressed: () => setState(() => _selectedImage = null),
+            child: Text(
+              'Choose Different Image',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------
+  // UPLOAD PROMPT (unchanged)
+  // --------------------------
   Widget _buildUploadPrompt() {
     return Material(
       color: Colors.transparent,
@@ -422,7 +477,6 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Upload Icon
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
@@ -433,17 +487,14 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                     width: 2,
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.upload_outlined,
                   size: 64,
                   color: Colors.lightBlueAccent,
                 ),
               ),
-
               const SizedBox(height: 32),
-
-              // Tap to select text
-              Text(
+              const Text(
                 'Tap to select image',
                 style: TextStyle(
                   fontSize: 22,
@@ -451,10 +502,7 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                   color: Colors.white,
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Supported formats
               Text(
                 'Supports JPG, PNG, JPEG',
                 style: TextStyle(
@@ -462,15 +510,10 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                   color: Colors.white.withOpacity(0.6),
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Additional info
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
@@ -482,11 +525,8 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: Colors.white.withOpacity(0.5),
-                    ),
+                    Icon(Icons.info_outline,
+                        size: 16, color: Colors.white.withOpacity(0.5)),
                     const SizedBox(width: 8),
                     Text(
                       'Max file size: 10MB',
@@ -505,10 +545,12 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
     );
   }
 
+  // --------------------------
+  // IMAGE PREVIEW (unchanged)
+  // --------------------------
   Widget _buildImagePreview() {
     return Stack(
       children: [
-        // Image Preview
         ClipRRect(
           borderRadius: BorderRadius.circular(22),
           child: Image.file(
@@ -519,7 +561,6 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
           ),
         ),
 
-        // Darken overlay during upload/analyzing
         if (_isUploading || _isAnalyzingPhase)
           Positioned.fill(
             child: Container(
@@ -530,7 +571,6 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
             ),
           ),
 
-        // Centered analyzing indicator
         if (_isAnalyzingPhase)
           Positioned.fill(
             child: Center(
@@ -550,7 +590,6 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
             ),
           ),
 
-        // Overlay gradient for better visibility
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
@@ -567,26 +606,29 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
           ),
         ),
 
-        // Detection result badge
         if (_detectionResult.isNotEmpty)
           Positioned(
             left: 16,
             bottom: 16,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withOpacity(0.15)),
+                border:
+                    Border.all(color: Colors.white.withOpacity(0.15)),
               ),
               child: Text(
                 _detectionResult,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
 
-        // Image info badge
         Positioned(
           top: 16,
           right: 16,
@@ -608,14 +650,10 @@ class _UploadImageScreenState extends State<UploadImageScreen> {
                   ),
                 ),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.greenAccent,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
+                  children: const [
+                    Icon(Icons.check_circle,
+                        color: Colors.greenAccent, size: 16),
+                    SizedBox(width: 6),
                     Text(
                       'Image Selected',
                       style: TextStyle(
